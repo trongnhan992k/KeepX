@@ -20,14 +20,17 @@ if "runserver" not in sys.argv or os.environ.get("RUN_MAIN") == "true":
 
 # === 1. Cấu hình Cơ bản ===
 SECRET_KEY = env("SECRET_KEY", default="django-insecure-change-me-in-production")
-DEBUG = env.bool("DEBUG", default=True)
+DEBUG = env.bool("DEBUG", default=False)
 
-# BẢO MẬT: Chỉ cho phép các domain thực tế truy cập
 if DEBUG:
     ALLOWED_HOSTS = ["*"]
 else:
-    ALLOWED_HOSTS = [        # Domain cũ của bạn
-                   # Cho phép URL gốc của Cloud Run
+    environ_hosts = os.environ.get("ALLOWED_HOSTS", "")
+    ALLOWED_HOSTS = [host.strip() for host in environ_hosts.split(",") if host.strip()]
+
+    environ_csrf = os.environ.get("CSRF_TRUSTED_ORIGINS", "")
+    CSRF_TRUSTED_ORIGINS = [
+        origin.strip() for origin in environ_csrf.split(",") if origin.strip()
     ]
 
 # === 2. Application definition ===
@@ -95,10 +98,6 @@ LOGIN_REDIRECT_URL = "note-list"
 LOGOUT_REDIRECT_URL = "login"
 
 # === 8. Security & CSRF ===
-CSRF_TRUSTED_ORIGINS = [
-   
-]
-
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 SESSION_ENGINE = "django.contrib.sessions.backends.signed_cookies"
 SESSION_COOKIE_AGE = 60 * 60 * 24 * 7

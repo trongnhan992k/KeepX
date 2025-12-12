@@ -71,3 +71,6 @@ node_modules/
 # key private api firebase
 serviceAccountKey.json
 *.json
+
+# trust domain
+env.yaml 

@@ -8,7 +8,7 @@ def initialize_firebase(base_dir):
 
     cred_path = os.path.join(base_dir, "serviceAccountKey.json")
     
-    bucket_name = os.environ.get("FIREBASE_STORAGE_BUCKET", "keepx-note.firebasestorage.app")
+    bucket_name = os.environ.get("FIREBASE_STORAGE_BUCKET", "keepx-project.firebasestorage.app")
 
     try:
         if os.path.exists(cred_path):
