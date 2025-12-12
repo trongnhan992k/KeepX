@@ -1,0 +1,149 @@
+/* static/css/style.css */
+:root {
+    --primary-color: #4A90E2; /* Xanh dương chủ đạo */
+    --secondary-color: #f5f6fa;
+    --text-color: #2d3436;
+    --danger-color: #ff6b6b;
+    --success-color: #2ecc71;
+    --white: #ffffff;
+    --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+body {
+    font-family: 'Inter', sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: var(--secondary-color);
+    color: var(--text-color);
+    line-height: 1.6;
+}
+
+/* --- Container & Layout --- */
+.container {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 20px;
+}
+
+/* --- Navbar --- */
+.navbar {
+    background: var(--white);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    padding: 15px 0;
+}
+.nav-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.logo {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--primary-color);
+    text-decoration: none;
+}
+.nav-links {
+    list-style: none;
+    display: flex;
+    gap: 20px;
+    align-items: center;
+}
+.nav-links a {
+    text-decoration: none;
+    color: var(--text-color);
+    font-weight: 600;
+}
+
+/* --- Buttons --- */
+.btn {
+    display: inline-block;
+    padding: 10px 20px;
+    border-radius: 6px;
+    text-decoration: none;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    transition: 0.3s;
+}
+.btn-primary {
+    background-color: var(--primary-color);
+    color: var(--white) !important;
+}
+.btn-primary:hover {
+    background-color: #357abd;
+}
+.btn-outline {
+    border: 2px solid var(--primary-color);
+    color: var(--primary-color) !important;
+    background: transparent;
+}
+.btn-outline:hover {
+    background-color: var(--primary-color);
+    color: var(--white) !important;
+}
+
+/* --- Forms (Auth & Notes) --- */
+.auth-box {
+    background: var(--white);
+    padding: 40px;
+    border-radius: 10px;
+    box-shadow: var(--shadow);
+    max-width: 450px;
+    margin: 50px auto;
+}
+.form-group {
+    margin-bottom: 20px;
+}
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+}
+.form-control, select {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    font-size: 1rem;
+    box-sizing: border-box; /* Quan trọng để không bị vỡ layout */
+}
+.form-control:focus {
+    border-color: var(--primary-color);
+    outline: none;
+}
+
+/* --- Hero Section (Trang chủ) --- */
+.hero {
+    text-align: center;
+    padding: 80px 0;
+    background: var(--white);
+}
+.hero h1 {
+    font-size: 3rem;
+    margin-bottom: 20px;
+}
+
+/* --- Messages (Thông báo) --- */
+.alert {
+    padding: 15px;
+    margin-top: 20px;
+    border-radius: 6px;
+    color: white;
+    text-align: center;
+}
+.alert-success { background-color: var(--success-color); }
+.alert-error, .alert-danger { background-color: var(--danger-color); }
+
+/* --- Profile --- */
+.profile-header {
+    text-align: center;
+    margin-bottom: 30px;
+}
+.avatar-preview {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 4px solid var(--primary-color);
+    margin-bottom: 15px;
+}

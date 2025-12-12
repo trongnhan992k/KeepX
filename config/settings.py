@@ -1,0 +1,111 @@
+# config/settings.py
+
+import os
+import sys
+from pathlib import Path
+import environ
+from .firebase_setup import initialize_firebase
+
+env = environ.Env()
+BASE_DIR = Path(__file__).resolve().parent.parent
+env_file = os.path.join(BASE_DIR, ".env")
+if os.path.exists(env_file):
+    environ.Env.read_env(env_file)
+
+if "runserver" not in sys.argv or os.environ.get("RUN_MAIN") == "true":
+    try:
+        FIREBASE_APP = initialize_firebase(BASE_DIR)
+    except Exception as e:
+        print(f"WARNING: Firebase chưa khởi tạo được: {e}")
+
+# === 1. Cấu hình Cơ bản ===
+SECRET_KEY = env("SECRET_KEY", default="django-insecure-change-me-in-production")
+DEBUG = env.bool("DEBUG", default=True)
+
+# BẢO MẬT: Chỉ cho phép các domain thực tế truy cập
+if DEBUG:
+    ALLOWED_HOSTS = ["*"]
+else:
+    ALLOWED_HOSTS = [        # Domain cũ của bạn
+                   # Cho phép URL gốc của Cloud Run
+    ]
+
+# === 2. Application definition ===
+INSTALLED_APPS = [
+    "django.contrib.sessions",
+    "django.contrib.messages",
+    "django.contrib.staticfiles",
+    "users",
+    "notes",
+]
+
+MIDDLEWARE = [
+    "django.middleware.security.SecurityMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",
+    "django.contrib.sessions.middleware.SessionMiddleware",
+    "django.middleware.common.CommonMiddleware",
+    "django.middleware.csrf.CsrfViewMiddleware",
+    "django.contrib.messages.middleware.MessageMiddleware",
+    "django.middleware.clickjacking.XFrameOptionsMiddleware",
+]
+
+ROOT_URLCONF = "config.urls"
+
+TEMPLATES = [
+    {
+        "BACKEND": "django.template.backends.django.DjangoTemplates",
+        "DIRS": [BASE_DIR / "templates"],
+        "APP_DIRS": True,
+        "OPTIONS": {
+            "context_processors": [
+                "django.template.context_processors.request",
+                "django.contrib.messages.context_processors.messages",
+            ],
+        },
+    },
+]
+
+WSGI_APPLICATION = "config.wsgi.application"
+
+# === 3. Database ===
+DATABASES = {}
+
+# === 5. Internationalization ===
+LANGUAGE_CODE = "en-us"
+TIME_ZONE = "UTC"
+USE_I18N = True
+USE_TZ = True
+
+# === 6. Static & Media Files ===
+STATIC_URL = "static/"
+STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR, "static"),
+]
+
+STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
+
+MEDIA_URL = "/media/"
+MEDIA_ROOT = os.path.join(BASE_DIR, "media")
+DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+# === 7. Auth Redirects ===
+LOGIN_URL = "login"
+LOGIN_REDIRECT_URL = "note-list"
+LOGOUT_REDIRECT_URL = "login"
+
+# === 8. Security & CSRF ===
+CSRF_TRUSTED_ORIGINS = [
+   
+]
+
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+SESSION_ENGINE = "django.contrib.sessions.backends.signed_cookies"
+SESSION_COOKIE_AGE = 60 * 60 * 24 * 7
+SESSION_COOKIE_SECURE = True
+SESSION_COOKIE_HTTPONLY = True
+SESSION_COOKIE_SAMESITE = "Lax"
+CSRF_COOKIE_SECURE = True
+
+# Lấy API Key từ biến môi trường
+FIREBASE_WEB_API_KEY = env("FIREBASE_WEB_API_KEY", default="API_KEY_NOT_SET")

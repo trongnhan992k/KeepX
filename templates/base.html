@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="vi" class="h-full scroll-smooth">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{% block title %}Keep4E - Ghi chú hiện đại{% endblock %}</title>
+    
+    <link rel="icon" type="image/png" href="{% static 'favicon/favicon-96x96.png' %}" sizes="96x96" />
+    <link rel="icon" type="image/svg+xml" href="{% static 'favicon/favicon.svg' %}" />
+    <link rel="shortcut icon" href="{% static 'favicon/favicon.ico' %}" />
+    <link rel="apple-touch-icon" sizes="180x180" href="{% static 'favicon/apple-touch-icon.png' %}" />
+    <link rel="manifest" href="{% static 'favicon/site.webmanifest' %}" />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            fontFamily: { sans: ["Plus Jakarta Sans", "sans-serif"] },
+            colors: {
+              dark: { bg: "#0f172a", card: "#1e293b", border: "#334155", text: "#f1f5f9", muted: "#94a3b8" },
+              primary: { 50: "#ecfdf5", 100: "#d1fae5", 500: "#10b981", 600: "#059669", 700: "#047857" },
+            },
+          },
+        },
+      };
+    </script>
+    
+    <script src="{% static 'js/app.js' %}"></script>
+    <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+    
+    <style>
+      [x-cloak] { display: none !important; }
+      .glass-nav { background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border-bottom: 1px solid rgba(0, 0, 0, 0.05); }
+      .dark .glass-nav { background: rgba(15, 23, 42, 0.8); border-bottom: 1px solid rgba(255, 255, 255, 0.05); }
+    </style>
+    
+    <script>
+      if (localStorage.getItem("theme") === "dark" || (!("theme" in localStorage) && window.matchMedia("(prefers-color-scheme: dark)").matches)) {
+        document.documentElement.classList.add("dark");
+      } else {
+        document.documentElement.classList.remove("dark");
+      }
+    </script>
+  </head>
+
+  <body class="h-full flex flex-col text-gray-800 dark:text-dark-text bg-gray-50 dark:bg-dark-bg transition-colors duration-300 antialiased" x-data="themeApp()">
+    
+    <nav class="glass-nav fixed w-full z-50 transition-colors duration-300" x-data="{ mobileMenuOpen: false }">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex justify-between h-16">
+          <div class="flex items-center">
+            <a href="/" class="flex-shrink-0 flex items-center gap-2 group">
+              <svg class="w-9 h-9 transition-transform duration-300 ease-out group-hover:scale-110" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path class="transition-all duration-300 ease-out group-hover:-translate-x-1 group-hover:-translate-y-1 group-hover:fill-emerald-400" d="M20 20 L50 50 L20 80 H40 L70 50 L40 20 Z" fill="#10B981"/> 
+                  <path class="transition-all duration-300 ease-out group-hover:translate-x-1 group-hover:-translate-y-1 group-hover:fill-emerald-600" d="M80 20 L50 50 L80 80 H60 L30 50 L60 20 Z" fill="#047857"/>
+              </svg>
+              <span class="font-bold text-xl tracking-tight text-gray-900 dark:text-white group-hover:text-emerald-900 dark:group-hover:text-emerald-100 transition-colors">
+                  Keep<span class="text-emerald-500 group-hover:text-emerald-400 transition-colors">X</span>
+              </span>
+            </a>
+          </div>
+
+          <div class="hidden sm:ml-6 sm:flex sm:items-center space-x-6">
+            <button @click="toggleTheme()" class="p-2 rounded-full text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700 transition-colors">
+              <i class="fas fa-sun text-yellow-500 text-lg" x-show="!darkMode"></i>
+              <i class="fas fa-moon text-primary-400 text-lg" x-show="darkMode" x-cloak></i>
+            </button>
+
+            {% if request.session.uid %}
+            <a href="{% url 'note-list' %}" class="text-gray-600 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 text-sm font-semibold transition">Ghi chú của tôi</a>
+
+            <div class="relative ml-3" x-data="{ open: false }">
+              <button @click="open = !open" @click.outside="open = false" class="group relative flex items-center justify-center p-[2px] rounded-full bg-gradient-to-tr from-emerald-500 via-teal-400 to-cyan-500 hover:scale-105 transition-transform duration-200">
+                <div class="rounded-full p-[2px] bg-white dark:bg-dark-card h-9 w-9 overflow-hidden">
+                  <img src="{{ avatar_url|default:'https://ui-avatars.com/api/?background=random' }}" class="w-full h-full object-cover rounded-full" />
+                </div>
+              </button>
+
+              <div x-show="open" x-transition class="origin-top-right absolute right-0 mt-2 w-56 rounded-xl shadow-xl py-1 bg-white dark:bg-dark-card ring-1 ring-black ring-opacity-5 dark:ring-white dark:ring-opacity-10 focus:outline-none divide-y divide-gray-100 dark:divide-gray-700" x-cloak>
+                <div class="px-4 py-3">
+                  <p class="text-xs text-gray-500 dark:text-gray-400">Xin chào,</p>
+                  <p class="text-sm font-bold text-gray-900 dark:text-white truncate">{{ username|default:"User" }}</p>
+                </div>
+                <div class="py-1">
+                  <a href="{% url 'profile' %}" class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 group flex items-center"><i class="fas fa-user-circle mr-3 opacity-70 text-primary-500"></i> Hồ sơ cá nhân</a>
+                </div>
+                <div class="py-1">
+                  <form action="{% url 'logout' %}" method="post" class="block">
+                    {% csrf_token %}
+                    <button type="submit" class="w-full text-left px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 group flex items-center font-medium"><i class="fas fa-sign-out-alt mr-3 opacity-70"></i> Đăng xuất</button>
+                  </form>
+                </div>
+              </div>
+            </div>
+            {% else %}
+            <div class="flex items-center gap-3">
+              <a href="{% url 'login' %}" class="text-gray-600 dark:text-gray-300 hover:text-primary-600 dark:hover:text-white px-3 py-2 text-sm font-semibold transition">Đăng nhập</a>
+              <a href="{% url 'register' %}" class="bg-primary-600 hover:bg-primary-700 text-white px-5 py-2.5 rounded-xl text-sm font-semibold shadow-lg shadow-primary-500/30 transition-all hover:-translate-y-0.5">Đăng ký</a>
+            </div>
+            {% endif %}
+          </div>
+          
+          <div class="flex items-center gap-4 sm:hidden">
+            <button @click="toggleTheme()" class="p-2 rounded-full text-gray-500 dark:text-gray-400"><i class="fas fa-sun text-yellow-500" x-show="!darkMode"></i><i class="fas fa-moon text-primary-400" x-show="darkMode" x-cloak></i></button>
+            <button @click="mobileMenuOpen = !mobileMenuOpen" class="inline-flex items-center justify-center p-2 rounded-lg text-gray-400 hover:text-gray-500 dark:hover:bg-gray-800"><i class="fas fa-bars text-xl" x-show="!mobileMenuOpen"></i><i class="fas fa-times text-xl" x-show="mobileMenuOpen" x-cloak></i></button>
+          </div>
+        </div>
+      </div>
+
+      <div class="sm:hidden bg-white dark:bg-dark-card border-t border-gray-200 dark:border-gray-800" x-show="mobileMenuOpen" x-collapse x-cloak>
+        <div class="pt-2 pb-3 space-y-1 px-2">
+          {% if request.session.uid %}
+          <a href="{% url 'note-list' %}" class="bg-primary-50 dark:bg-primary-900/20 text-primary-700 dark:text-primary-400 block px-3 py-2 rounded-lg text-base font-medium">Ghi chú của tôi</a>
+          <a href="{% url 'profile' %}" class="text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 block px-3 py-2 rounded-lg text-base font-medium">Hồ sơ cá nhân</a>
+          <form action="{% url 'logout' %}" method="post">
+            {% csrf_token %}
+            <button type="submit" class="w-full text-left text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 block px-3 py-2 rounded-lg text-base font-medium">Đăng xuất</button>
+          </form>
+          {% else %}
+          <a href="{% url 'login' %}" class="text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 block px-3 py-2 rounded-lg text-base font-medium">Đăng nhập</a>
+          <a href="{% url 'register' %}" class="text-primary-600 dark:text-primary-400 hover:bg-primary-50 dark:hover:bg-gray-700 block px-3 py-2 rounded-lg text-base font-bold">Đăng ký</a>
+          {% endif %}
+        </div>
+      </div>
+    </nav>
+
+    {% if messages %}
+    <div class="fixed top-24 right-5 z-50 w-full max-w-sm space-y-3 pointer-events-none">
+      {% for message in messages %}
+      <div class="pointer-events-auto bg-white dark:bg-dark-card border-l-4 border-emerald-500 shadow-xl rounded-r-lg p-4 flex items-start" x-data="{ show: true }" x-show="show" x-init="setTimeout(() => show = false, 5000)">
+        <div class="ml-3 w-0 flex-1">
+          <p class="text-sm font-medium text-gray-900 dark:text-gray-100">{{ message }}</p>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    <main class="flex-grow pt-24 pb-12 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto w-full">
+      {% block content %}{% endblock %}
+    </main>
+
+    <footer class="bg-white dark:bg-dark-bg border-t border-gray-200 dark:border-dark-border mt-auto">
+      <div class="max-w-7xl mx-auto py-8 px-4 text-center">
+        <span class="text-gray-500 dark:text-gray-400 text-sm font-medium">Keep4E App &copy; {% now "Y" %}</span>
+      </div>
+    </footer>
+  </body>
+</html>

@@ -1,0 +1,170 @@
+{% extends 'base.html' %} {% block content %}
+<div
+  class="min-h-[85vh] flex flex-col justify-center py-12 sm:px-6 lg:px-8 bg-gray-50 dark:bg-dark-bg transition-colors duration-300 relative isolate"
+>
+  <div
+    class="absolute inset-x-0 top-[-10rem] -z-10 transform-gpu overflow-hidden blur-3xl sm:top-[-20rem] opacity-0 dark:opacity-20 transition-opacity duration-500"
+    aria-hidden="true"
+  >
+    <!-- UPDATE: Background Blob Gradient -->
+    <div
+      class="relative left-1/2 -z-10 aspect-[1155/678] w-[36.125rem] max-w-none -translate-x-1/2 rotate-[30deg] bg-gradient-to-tr from-[#10b981] to-[#3b82f6] opacity-30 sm:left-[calc(50%-40rem)] sm:w-[72.1875rem]"
+    ></div>
+  </div>
+
+  <div class="sm:mx-auto sm:w-full sm:max-w-md">
+    <h2
+      class="text-center text-3xl font-extrabold text-gray-900 dark:text-white tracking-tight"
+    >
+      Tạo tài khoản mới
+    </h2>
+    <p class="mt-2 text-center text-sm text-gray-600 dark:text-gray-400">
+      Hoàn toàn miễn phí và chỉ mất 30 giây.
+    </p>
+  </div>
+
+  <div class="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
+    <div
+      class="bg-white dark:bg-dark-card py-8 px-4 shadow-xl shadow-gray-200/50 dark:shadow-none rounded-3xl sm:px-10 border border-gray-100 dark:border-gray-700 transition-colors duration-300"
+    >
+      <form
+        class="space-y-5"
+        method="POST"
+        x-data="{ 
+                password: '', 
+                confirm_password: '', 
+                isMatching() { 
+                    // Chỉ báo lỗi nều confirm_password đã nhập dữ liệu mà khác password
+                    return this.password === this.confirm_password || this.confirm_password === ''; 
+                },
+                isValid() {
+                    // Logic kiểm tra nút Submit: Cả 2 phải có dữ liệu và phải khớp nhau
+                    return this.password !== '' && this.confirm_password !== '' && this.password === this.confirm_password;
+                }
+            }"
+      >
+        {% csrf_token %} {% if form.non_field_errors %}
+        <div
+          class="bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 p-3 rounded-xl text-sm mb-4"
+        >
+          {% for error in form.non_field_errors %}
+          <p class="flex items-center">
+            <i class="fas fa-exclamation-circle mr-2"></i> {{ error }}
+          </p>
+          {% endfor %}
+        </div>
+        {% endif %}
+
+        <div>
+          <label
+            class="block text-sm font-medium text-gray-700 dark:text-gray-300"
+            >Tên hiển thị</label
+          >
+          <input
+            type="text"
+            name="username"
+            required
+            class="mt-2 block w-full rounded-xl shadow-sm sm:text-sm py-3 px-4 border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-800/50 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:ring-primary-500 focus:border-primary-500 dark:focus:ring-primary-400 dark:focus:border-primary-400 focus:bg-white dark:focus:bg-gray-800 transition-all"
+            placeholder="Ví dụ: Minh Nhật"
+          />
+        </div>
+
+        <div>
+          <label
+            class="block text-sm font-medium text-gray-700 dark:text-gray-300"
+            >Email</label
+          >
+          <input
+            type="email"
+            name="email"
+            required
+            class="mt-2 block w-full rounded-xl shadow-sm sm:text-sm py-3 px-4 {% if form.email.errors %}border-red-500 focus:border-red-500 focus:ring-red-500{% else %}border-gray-300 dark:border-gray-600 focus:ring-primary-500 focus:border-primary-500 dark:focus:ring-primary-400 dark:focus:border-primary-400{% endif %} bg-gray-50 dark:bg-gray-800/50 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:bg-white dark:focus:bg-gray-800 transition-all"
+            placeholder="email@domain.com"
+          />
+
+          {% if form.email.errors %}
+          <div
+            class="mt-1 text-red-500 text-xs flex items-center animate-pulse"
+          >
+            <i class="fas fa-exclamation-circle mr-1"></i>
+            {{ form.email.errors.0 }}
+          </div>
+          {% endif %}
+        </div>
+
+        <div>
+          <label
+            class="block text-sm font-medium text-gray-700 dark:text-gray-300"
+            >Mật khẩu</label
+          >
+          <input
+            type="password"
+            name="password"
+            x-model="password"
+            required
+            class="mt-2 block w-full rounded-xl shadow-sm sm:text-sm py-3 px-4 border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-800/50 text-gray-900 dark:text-white focus:ring-primary-500 focus:border-primary-500 dark:focus:ring-primary-400 dark:focus:border-primary-400 focus:bg-white dark:focus:bg-gray-800 transition-all"
+          />
+        </div>
+
+        <div>
+          <label
+            class="block text-sm font-medium text-gray-700 dark:text-gray-300"
+            >Nhập lại mật khẩu</label
+          >
+          <div class="relative">
+            <input
+              type="password"
+              name="confirm_password"
+              x-model="confirm_password"
+              required
+              class="mt-2 block w-full rounded-xl shadow-sm sm:text-sm py-3 px-4 bg-gray-50 dark:bg-gray-800/50 text-gray-900 dark:text-white focus:bg-white dark:focus:bg-gray-800 transition-all"
+              :class="isMatching() ? 'border-gray-300 dark:border-gray-600 focus:ring-primary-500 focus:border-primary-500' : 'border-red-500 focus:border-red-500 focus:ring-red-500'"
+            />
+
+            <div
+              class="absolute inset-y-0 right-0 top-2 pr-3 flex items-center pointer-events-none"
+              x-show="!isMatching()"
+              x-transition
+              style="display: none"
+            >
+              <i class="fas fa-exclamation-circle text-red-500"></i>
+            </div>
+          </div>
+
+          <p
+            x-show="!isMatching()"
+            x-transition
+            style="display: none"
+            class="mt-1 text-xs text-red-600 dark:text-red-400 flex items-center"
+          >
+            <i class="fas fa-times-circle mr-1"></i> Mật khẩu nhập lại không
+            trùng khớp.
+          </p>
+        </div>
+
+        <div class="pt-4">
+          <button
+            type="submit"
+            :disabled="!isValid()"
+            :class="{ 'opacity-50 cursor-not-allowed': !isValid() }"
+            class="w-full flex justify-center py-3 px-4 border border-transparent rounded-xl shadow-lg shadow-primary-500/30 text-sm font-bold text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-all transform hover:-translate-y-0.5"
+          >
+            Đăng ký tài khoản
+          </button>
+        </div>
+      </form>
+
+      <div class="mt-6 text-center">
+        <p class="text-sm text-gray-500 dark:text-gray-400">
+          Đã có tài khoản?
+          <a
+            href="{% url 'login' %}"
+            class="font-semibold text-primary-600 dark:text-primary-400 hover:text-primary-500 dark:hover:text-primary-300 transition-colors"
+            >Đăng nhập ngay</a
+          >
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

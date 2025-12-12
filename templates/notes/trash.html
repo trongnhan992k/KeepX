@@ -1,0 +1,72 @@
+{% extends 'base.html' %} {% block title %}Thùng rác - MyNotes{% endblock %} 
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 py-8">
+  <div class="flex items-center gap-4 mb-8">
+    <a
+      href="{% url 'note-list' %}"
+      class="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500 transition"
+    >
+      <i class="fas fa-arrow-left text-xl"></i>
+    </a>
+    <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Thùng rác</h1>
+    <span class="text-sm text-gray-500 italic"
+      >Ghi chú trong thùng rác sẽ bị xóa vĩnh viễn sau 30 ngày (tính năng sắp ra
+      mắt).</span
+    >
+  </div>
+
+  {% if not notes %}
+  <div class="text-center py-20 opacity-50">
+    <i class="fas fa-trash-alt text-6xl text-gray-300 mb-4"></i>
+    <p class="text-xl">Thùng rác trống</p>
+  </div>
+  {% else %}
+  <div
+    class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4"
+  >
+    {% for note in notes %}
+    <div
+      class="relative group rounded-xl border border-gray-200 dark:border-gray-700 p-4 flex flex-col opacity-75 hover:opacity-100 transition"
+      style="{% if note.color %}background-color: {{ note.color }}{% else %}background-color: transparent{% endif %}"
+      class="{% if not note.color %}bg-white dark:bg-dark-card{% endif %}"
+    >
+      {% if note.image_url %}
+      <img
+        src="{{ note.image_url }}"
+        class="w-full h-32 object-cover rounded-lg mb-2 opacity-80"
+      />
+      {% endif %}
+
+      <h3 class="font-bold text-gray-800 dark:text-white mb-1">
+        {{ note.title|default:"(Không tiêu đề)" }}
+      </h3>
+      <p class="text-sm text-gray-600 dark:text-gray-400 line-clamp-3 mb-4">
+        {{ note.content|striptags }}
+      </p>
+
+      <div
+        class="mt-auto flex justify-end gap-2 pt-3 border-t border-black/5 dark:border-white/5"
+      >
+        <a
+          href="{% url 'note-restore' note.id %}"
+          class="p-2 text-green-600 hover:bg-green-100 dark:hover:bg-green-900/30 rounded-lg transition"
+          title="Khôi phục"
+        >
+          <i class="fas fa-trash-restore-alt"></i>
+        </a>
+
+        <a
+          href="{% url 'note-permanent-delete' note.id %}"
+          onclick="return confirm('Hành động này không thể hoàn tác!')"
+          class="p-2 text-red-600 hover:bg-red-100 dark:hover:bg-red-900/30 rounded-lg transition"
+          title="Xóa vĩnh viễn"
+        >
+          <i class="fas fa-times"></i>
+        </a>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+</div>
+{% endblock %}
