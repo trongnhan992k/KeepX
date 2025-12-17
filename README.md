@@ -1,8 +1,11 @@
 # KeepX - Ứng Dụng Ghi Chú Hiện Đại & Bảo Mật
 
 **KeepX** là một ứng dụng quản lý ghi chú mạnh mẽ, được xây dựng trên nền tảng **Django** kết hợp với sức mạnh đám mây của **Firebase**. Ứng dụng tập trung vào trải nghiệm người dùng tối giản, tốc độ phản hồi nhanh và khả năng đồng bộ hóa dữ liệu thời gian thực.
-
-![KeepX Screenshot](https://drive.google.com/file/d/1DS2qYiewECH-hJekCu1tzLbOxAv1EdxP/view?usp=drive_link)
+![Index Screen](screenshots/index.png)
+![Login Screen](screenshots/login.png)
+![Register Screen](screenshots/register.png)
+![Note list Screen](screenshots/note-list.png)
+![Profile Screen](screenshots/profile.png)
 
 ## 🚀 Tính Năng Nổi Bật
 
@@ -134,6 +137,7 @@ KeepX/
 │   ├── views.py            # Logic Auth, Profile, Bảo mật
 │   ├── forms.py            # Form đăng ký, đăng nhập, đổi mật khẩu
 │   └── templates/users/    # Giao diện Auth
+├── screenshots/            # Ảnh chụp giao diện
 ├── static/                 # CSS, JS, Images, Favicon
 ├── templates/              # Base layout & components
 ├── serviceAccountKey.json  # (Ignored) Key kết nối Firebase Admin
