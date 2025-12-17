@@ -2,8 +2,7 @@
 
 **KeepX** là một ứng dụng quản lý ghi chú mạnh mẽ, được xây dựng trên nền tảng **Django** kết hợp với sức mạnh đám mây của **Firebase**. Ứng dụng tập trung vào trải nghiệm người dùng tối giản, tốc độ phản hồi nhanh và khả năng đồng bộ hóa dữ liệu thời gian thực.
 
-![KeepX Screenshot](https://keepx-project.web.app/)
-*(Thay thế link trên bằng ảnh chụp màn hình thực tế của dự án)*
+![KeepX Screenshot](https://drive.google.com/file/d/1DS2qYiewECH-hJekCu1tzLbOxAv1EdxP/view?usp=drive_link)
 
 ## 🚀 Tính Năng Nổi Bật
 
