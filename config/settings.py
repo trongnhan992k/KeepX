@@ -158,7 +158,7 @@ if "runserver" not in sys.argv or os.environ.get("RUN_MAIN") == "true":
 
 # === 1. Cấu hình Cơ bản ===
 SECRET_KEY = env("SECRET_KEY", default="django-insecure-change-me-in-production")
-DEBUG = env.bool("DEBUG", default=False)
+DEBUG = env.bool("DEBUG", default=True)
 
 # Cho phép tất cả Host (Cloud Run đã lo bảo mật lớp ngoài)
 ALLOWED_HOSTS = ["*"]
@@ -254,3 +254,5 @@ SECURE_SSL_REDIRECT = False
 
 # Lấy API Key
 FIREBASE_WEB_API_KEY = env("FIREBASE_WEB_API_KEY", default="API_KEY_NOT_SET")
+
+SECURE_CROSS_ORIGIN_OPENER_POLICY = "same-origin-allow-popups"
