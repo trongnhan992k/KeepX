@@ -6,6 +6,7 @@ from google.cloud.firestore import FieldFilter, Query
 from urllib.parse import unquote, urlparse
 import uuid
 import json
+from datetime import datetime, timedelta  # [CẬP NHẬT] Thêm timedelta
 
 # --- CẤU HÌNH ---
 db = firestore.client()
@@ -87,6 +88,11 @@ def note_list(request):
     username, user_email, avatar = _get_user_info(uid)
     all_notes = []
 
+    # [CẬP NHẬT QUAN TRỌNG] Chuyển đổi giờ Server (UTC) sang giờ Việt Nam (UTC+7)
+    # Nếu không cộng 7 tiếng, Server sẽ bị chậm và không bắt kịp deadline thực tế
+    now_vn = datetime.utcnow() + timedelta(hours=7)
+    now_str = now_vn.strftime("%Y-%m-%dT%H:%M")
+
     notes_ref = db.collection("users").document(uid).collection("notes")
     try:
         docs_generator = (
@@ -106,6 +112,22 @@ def note_list(request):
         note = doc.to_dict()
         note["id"] = doc.id
         note["is_owner"] = True
+        
+        # --- LOGIC TỰ ĐỘNG CHUYỂN TRỄ HẠN ---
+        deadline = note.get("deadline", "")
+        status = note.get("status", "todo")
+        
+        # So sánh deadline với giờ hiện tại (đã quy đổi về VN)
+        if deadline and deadline < now_str and status in ["todo", "doing"]:
+            # Cập nhật hiển thị ngay lập tức
+            note["status"] = "overdue"
+            
+            # Cập nhật ngầm vào Firebase để lưu trạng thái
+            try:
+                notes_ref.document(doc.id).update({"status": "overdue"})
+            except: pass
+        # ------------------------------------
+
         if "labels" not in note: note["labels"] = []
         all_notes.append(note)
 
@@ -120,6 +142,13 @@ def note_list(request):
                 note["id"] = doc.id
                 note["is_owner"] = False
                 note["shared_label"] = "Được chia sẻ"
+                
+                # Logic hiển thị trễ hạn cho note được chia sẻ
+                deadline = note.get("deadline", "")
+                status = note.get("status", "todo")
+                if deadline and deadline < now_str and status in ["todo", "doing"]:
+                    note["status"] = "overdue"
+                
                 all_notes.append(note)
     except Exception as e:
         print(f"Lỗi lấy shared notes: {e}")
@@ -138,7 +167,8 @@ def note_list(request):
             "avatar_url": avatar,
             "user_email": user_email,
             "username": username,
-            "view_mode": "list"
+            "view_mode": "list",
+            "now_iso": now_str 
         },
     )
 
@@ -224,6 +254,10 @@ def create_note(request):
         is_pinned = request.POST.get("is_pinned") == "true"
         reminder = request.POST.get("reminder", "")
         
+        # Lấy dữ liệu Task
+        deadline = request.POST.get("deadline", "")
+        status = request.POST.get("status", "todo") # todo, doing, done, overdue
+        
         try: labels = json.loads(request.POST.get("labels", "[]"))
         except: labels = []
 
@@ -252,6 +286,11 @@ def create_note(request):
                 "labels": labels,
                 "shared_with": shared_with,
                 "reminder_time": reminder,
+                
+                # Thêm vào data
+                "deadline": deadline,
+                "status": status,
+
                 "created_at": firestore.SERVER_TIMESTAMP,
                 "updated_at": firestore.SERVER_TIMESTAMP,
             }
@@ -276,6 +315,10 @@ def note_update(request, note_id):
             if "color" in request.POST: update_data["color"] = request.POST.get("color")
             if "is_pinned" in request.POST: update_data["is_pinned"] = request.POST.get("is_pinned") == "true"
             if "reminder" in request.POST: update_data["reminder_time"] = request.POST.get("reminder")
+            
+            # Update Task info
+            if "deadline" in request.POST: update_data["deadline"] = request.POST.get("deadline")
+            if "status" in request.POST: update_data["status"] = request.POST.get("status")
 
             if "labels" in request.POST:
                 try: update_data["labels"] = json.loads(request.POST.get("labels"))
@@ -342,3 +385,41 @@ def note_permanent_delete(request, note_id):
         else: messages.warning(request, "Ghi chú không tồn tại.")
     except Exception: messages.error(request, "Lỗi xóa.")
     return redirect("trash-list")
+
+
+# --- XỬ LÝ HÀNG LOẠT (BULK ACTION) ---
+def bulk_action(request):
+    if request.method == "POST":
+        uid = request.session.get("uid")
+        if not uid: return JsonResponse({"error": "Unauthorized"}, status=401)
+
+        try:
+            body = json.loads(request.body)
+            note_ids = body.get("note_ids", [])
+            action = body.get("action", "")
+
+            if not note_ids:
+                return JsonResponse({"error": "No notes selected"}, status=400)
+
+            batch = db.batch()
+            notes_ref = db.collection("users").document(uid).collection("notes")
+
+            for note_id in note_ids:
+                doc_ref = notes_ref.document(note_id)
+                if action == "delete": # Chuyển vào thùng rác
+                    batch.update(doc_ref, {"is_trashed": True, "updated_at": firestore.SERVER_TIMESTAMP})
+                elif action == "restore": # Khôi phục
+                    batch.update(doc_ref, {"is_trashed": False, "updated_at": firestore.SERVER_TIMESTAMP})
+                elif action == "permanent_delete": # Xóa vĩnh viễn
+                    doc_snapshot = doc_ref.get()
+                    if doc_snapshot.exists:
+                        data = doc_snapshot.to_dict()
+                        if data.get("image_url"):
+                            _delete_image_from_storage(data["image_url"])
+                        batch.delete(doc_ref)
+
+            batch.commit()
+            return JsonResponse({"status": "success"})
+        except Exception as e:
+            return JsonResponse({"error": str(e)}, status=500)
+    return JsonResponse({"error": "Method not allowed"}, status=405)
