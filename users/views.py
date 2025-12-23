@@ -3,6 +3,7 @@ from django.contrib import messages
 from django.conf import settings
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
+from django.urls import reverse
 import requests
 import urllib.parse
 import json
@@ -511,57 +512,93 @@ def change_password_view(request):
         "users/change_password_final.html",
         {"form": form, "username": username, "avatar_url": avatar_url},
     )
+    
+    
+    
 
+
+
+# ==========================================
+# 3. QUÊN MẬT KHẨU & ACTION HANDLER (ROUTER)
+# ==========================================
 
 def forgot_password(request):
+    """Gửi yêu cầu reset password"""
     if request.method == "POST":
         form = ForgotPasswordForm(request.POST)
         if form.is_valid():
             email = form.cleaned_data.get("email")
-            endpoint = f"https://identitytoolkit.googleapis.com/v1/accounts:sendOobCode?key={FIREBASE_WEB_API_KEY}"
             try:
                 r = requests.post(
-                    endpoint, json={"requestType": "PASSWORD_RESET", "email": email}
+                    f"https://identitytoolkit.googleapis.com/v1/accounts:sendOobCode?key={FIREBASE_WEB_API_KEY}",
+                    json={"requestType": "PASSWORD_RESET", "email": email}
                 )
                 if r.status_code == 200:
-                    messages.success(request, "Email đặt lại mật khẩu đã gửi!")
+                    messages.success(request, "Email reset password đã được gửi!")
                     return redirect("login")
                 else:
-                    messages.error(request, "Email không tồn tại.")
-            except Exception as e:
-                messages.error(request, f"Lỗi: {str(e)}")
+                    error = r.json().get("error", {}).get("message", "")
+                    messages.error(request, "Email không tồn tại." if "EMAIL_NOT_FOUND" in error else error)
+            except Exception as e: messages.error(request, f"Lỗi: {e}")
     else:
         form = ForgotPasswordForm()
     return render(request, "users/forgot_password.html", {"form": form})
 
 
-def reset_password_confirm(request):
+# --- TRẠM TRUNG CHUYỂN (ROUTER) ---
+def firebase_action_handler(request):
+    """
+    Hàm này nhận request từ Firebase Email và điều hướng (Redirect)
+    """
+    mode = request.GET.get("mode")  
     oob_code = request.GET.get("oobCode")
+    
+    if not oob_code:
+        messages.error(request, "Đường dẫn không hợp lệ hoặc thiếu mã xác thực.")
+        return redirect("login")
+
+    if mode == "resetPassword":
+        url = reverse("reset_password_confirm") 
+        return redirect(f"{url}?oobCode={oob_code}")
+     
+
+
+def reset_password_confirm(request):
+    """
+    View hiển thị form nhập mật khẩu mới.
+    """
+    oob_code = request.GET.get("oobCode")
+    
     if not oob_code and request.method == "GET":
+        messages.error(request, "Thiếu mã xác thực.")
         return redirect("login")
 
     if request.method == "POST":
         form = ResetPasswordConfirmForm(request.POST)
         if form.is_valid():
             new_pass = form.cleaned_data.get("new_password")
-            code = request.POST.get("oob_code_hidden")
-            endpoint = f"https://identitytoolkit.googleapis.com/v1/accounts:resetPassword?key={FIREBASE_WEB_API_KEY}"
+            
+            # Lấy code từ hidden input trong form hoặc URL
+            code = request.POST.get("oob_code_hidden") or oob_code
 
             try:
                 r = requests.post(
-                    endpoint, json={"oobCode": code, "newPassword": new_pass}
+                    f"https://identitytoolkit.googleapis.com/v1/accounts:resetPassword?key={FIREBASE_WEB_API_KEY}",
+                    json={"oobCode": code, "newPassword": new_pass}
                 )
+                
                 if r.status_code == 200:
-                    messages.success(request, "Đổi mật khẩu thành công!")
+                    messages.success(request, "Đổi mật khẩu thành công! Vui lòng đăng nhập lại.")
                     return redirect("login")
                 else:
-                    messages.error(request, "Link lỗi hoặc hết hạn.")
+                    messages.error(request, "Link này đã hết hạn hoặc không hợp lệ. Vui lòng thử lại.")
+                    return redirect("forgot_password")
             except Exception as e:
-                messages.error(request, f"Lỗi: {str(e)}")
+                messages.error(request, f"Lỗi kết nối: {str(e)}")
     else:
         form = ResetPasswordConfirmForm()
-    return render(
-        request,
-        "users/reset_password_confirm.html",
-        {"form": form, "oob_code": oob_code},
-    )
+    
+    return render(request, "users/reset_password_confirm.html", {
+        "form": form, 
+        "oob_code": oob_code 
+    })
