@@ -1,20 +1,18 @@
-{% extends 'base.html' %} {% block content %}
+{% extends 'base.html' %} 
+{% block content %}
 <div
   class="min-h-[85vh] flex flex-col justify-center py-12 sm:px-6 lg:px-8 bg-gray-50 dark:bg-dark-bg transition-colors duration-300 relative isolate"
 >
-  <!-- Background Glow -->
   <div
     class="absolute inset-x-0 -top-40 -z-10 transform-gpu overflow-hidden blur-3xl sm:-top-80 opacity-0 dark:opacity-20 transition-opacity duration-500"
     aria-hidden="true"
   >
-    <!-- UPDATE: Blob Gradient Green/Teal -->
     <div
       class="relative left-[calc(50%-11rem)] aspect-[1155/678] w-[36.125rem] -translate-x-1/2 rotate-[30deg] bg-gradient-to-tr from-[#10b981] to-[#3b82f6] sm:left-[calc(50%-30rem)] sm:w-[72.1875rem]"
     ></div>
   </div>
 
   <div class="sm:mx-auto sm:w-full sm:max-w-md">
-    <!-- UPDATE: Icon Gradient Emerald/Teal -->
     <div
       class="mx-auto h-14 w-14 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-2xl flex items-center justify-center text-white text-2xl shadow-lg shadow-emerald-500/20"
     >
@@ -43,7 +41,6 @@
       <form class="space-y-6" method="POST">
         {% csrf_token %}
 
-        <!-- ALERT: Thông báo lỗi đăng nhập -->
         {% if form.errors or message %}
         <div
           class="rounded-xl bg-red-50 dark:bg-red-900/20 p-4 border border-red-100 dark:border-red-800 animate-[shake_0.5s_ease-in-out]"
@@ -122,12 +119,7 @@
               id="{{ form.remember_me.id_for_label }}"
               name="{{ form.remember_me.name }}"
               type="checkbox"
-              {%
-              if
-              form.remember_me.value
-              %}checked{%
-              endif
-              %}
+              {% if form.remember_me.value %}checked{% endif %}
               class="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded bg-gray-50 dark:bg-gray-700 dark:border-gray-600"
             />
 
@@ -173,45 +165,118 @@
         </div>
 
         <div class="mt-6 grid grid-cols-2 gap-3">
-          <a
-            href="#"
+          <button type="button" id="google-btn"
             class="w-full inline-flex justify-center py-2.5 px-4 border border-gray-300 dark:border-gray-600 rounded-xl shadow-sm bg-white dark:bg-gray-800/50 text-sm font-medium text-gray-500 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
           >
             <i class="fab fa-google text-red-500 text-lg mr-2"></i> Google
-          </a>
-          <a
-            href="#"
+          </button>
+          
+          <button type="button" id="facebook-btn"
             class="w-full inline-flex justify-center py-2.5 px-4 border border-gray-300 dark:border-gray-600 rounded-xl shadow-sm bg-white dark:bg-gray-800/50 text-sm font-medium text-gray-500 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
           >
             <i class="fab fa-facebook text-blue-600 text-lg mr-2"></i> Facebook
-          </a>
+          </button>
         </div>
       </div>
     </div>
   </div>
 </div>
 
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+  import { getAuth, signInWithPopup, GoogleAuthProvider, FacebookAuthProvider } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+
+  // Cấu hình Firebase
+  const firebaseApiKey = "{{ FIREBASE_WEB_API_KEY }}";
+  
+  if (!firebaseApiKey || firebaseApiKey === "None") {
+      console.error("LỖI: Chưa có API Key. Kiểm tra settings.py và views.py");
+      alert("Lỗi cấu hình hệ thống (Thiếu Firebase Key)");
+  }
+
+  const firebaseConfig = {
+    apiKey: firebaseApiKey,
+    authDomain: "keepx-project.firebaseapp.com",
+    projectId: "keepx-project",
+    storageBucket: "keepx-project.firebasestorage.app",
+    messagingSenderId: "872910807386", // Thay bằng ID của bạn
+    appId: "1:872910807386:web:de383f797535fe0e07d363" // Thay bằng App ID của bạn
+  };
+
+  let app, auth;
+  try {
+      app = initializeApp(firebaseConfig);
+      auth = getAuth(app);
+      console.log("Firebase initialized OK");
+  } catch(e) {
+      console.error("Firebase Init Error:", e);
+  }
+
+  async function sendTokenToBackend(idToken) {
+    try {
+        console.log("Đang gửi token về server...");
+        const response = await fetch("{% url 'social-login' %}", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ idToken: idToken })
+        });
+
+        const data = await response.json();
+        if (data.status === "success") {
+            window.location.href = data.redirect_url;
+        } else {
+            alert("Lỗi đăng nhập: " + data.message);
+        }
+    } catch (error) {
+        console.error("Error sending token:", error);
+        alert("Lỗi kết nối đến máy chủ.");
+    }
+  }
+
+  // Gắn sự kiện click
+  const googleBtn = document.getElementById("google-btn");
+  if(googleBtn) {
+      googleBtn.addEventListener("click", () => {
+          if(!auth) { alert("Lỗi cấu hình Firebase"); return; }
+          
+          console.log("Đang mở popup Google...");
+          const provider = new GoogleAuthProvider();
+          signInWithPopup(auth, provider)
+            .then((result) => {
+                console.log("Google OK, lấy token...");
+                result.user.getIdToken().then((idToken) => sendTokenToBackend(idToken));
+            }).catch((error) => {
+                console.error("Google Auth Error:", error);
+                alert("Đăng nhập Google thất bại: " + error.message);
+            });
+      });
+  } else {
+      console.error("Không tìm thấy nút Google (ID: google-btn)");
+  }
+
+  const fbBtn = document.getElementById("facebook-btn");
+  if(fbBtn) {
+      fbBtn.addEventListener("click", () => {
+          if(!auth) { alert("Lỗi cấu hình Firebase"); return; }
+          const provider = new FacebookAuthProvider();
+          signInWithPopup(auth, provider)
+            .then((result) => {
+                result.user.getIdToken().then((idToken) => sendTokenToBackend(idToken));
+            }).catch((error) => {
+                console.error("Facebook Auth Error:", error);
+                alert("Đăng nhập Facebook thất bại: " + error.message);
+            });
+      });
+  }
+</script>
+
 <style>
   @keyframes shake {
-    0%,
-    100% {
-      transform: translateX(0);
-    }
-
-    10%,
-    30%,
-    50%,
-    70%,
-    90% {
-      transform: translateX(-4px);
-    }
-
-    20%,
-    40%,
-    60%,
-    80% {
-      transform: translateX(4px);
-    }
+    0%, 100% { transform: translateX(0); }
+    10%, 30%, 50%, 70%, 90% { transform: translateX(-4px); }
+    20%, 40%, 60%, 80% { transform: translateX(4px); }
   }
 </style>
 {% endblock %}
