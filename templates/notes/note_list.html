@@ -1,14 +1,15 @@
 {% extends 'base.html' %} 
 {% load static %}
 
-{% block title %}MyNotes - Ghi chú{% endblock %} 
+{% block title %}MyNotes - Ghi chú & Công việc{% endblock %} 
 
 {% block content %}
 <div class="min-h-screen relative" 
      x-data="noteApp({
          csrfToken: '{{ csrf_token }}',
          createUrl: '{% url 'create-note' %}',
-         updateUrl: '{% url 'note-update' '00000' %}'
+         updateUrl: '{% url 'note-update' '00000' %}',
+         deleteUrl: '{% url 'note-delete' '00000' %}'
      })">
   
   <div class="fixed inset-0 z-0 pointer-events-none overflow-hidden select-none opacity-40 dark:opacity-20">
@@ -18,200 +19,145 @@
 
   <div class="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
     
-    <div class="flex flex-col md:flex-row items-center gap-4 mb-8 sticky top-20 z-40 py-2 transition-all">
-      <div class="relative w-full md:flex-1 group">
-        <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-          <i class="fas fa-search text-emerald-500"></i>
-        </div>
-        <input type="text" x-model="searchQuery" class="block w-full pl-11 pr-10 py-3.5 bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl border border-emerald-100 dark:border-gray-700 rounded-2xl text-gray-900 dark:text-white focus:ring-4 focus:ring-emerald-500/20 focus:border-emerald-500 shadow-sm" placeholder="Tìm kiếm ghi chú, nhãn..." />
-      </div>
-
-      <div class="flex items-center gap-3 w-full md:w-auto justify-end">
-        <div class="bg-white/80 dark:bg-gray-800/80 p-1 rounded-xl border border-gray-200 dark:border-gray-700 flex shadow-sm">
-            <button @click="viewMode = 'grid'" :class="viewMode === 'grid' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400' : 'text-gray-500'" class="p-2.5 rounded-lg transition-colors"><i class="fas fa-th-large"></i></button>
-            <button @click="viewMode = 'list'" :class="viewMode === 'list' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400' : 'text-gray-500'" class="p-2.5 rounded-lg transition-colors"><i class="fas fa-list"></i></button>
-        </div>
-        <a href="{% url 'trash-list' %}" class="flex items-center gap-2 px-5 py-3.5 bg-white/80 dark:bg-gray-800/80 backdrop-blur-md text-gray-600 dark:text-gray-300 rounded-2xl border border-gray-200 dark:border-gray-700 hover:bg-red-50 hover:text-red-600 transition-all shadow-sm font-medium">
-          <i class="fas fa-trash-alt"></i> <span class="hidden sm:inline">Thùng rác</span>
-        </a>
-      </div>
-    </div>
-
-    {% if current_label %}
-    <div class="mb-6 flex items-center gap-2 animate-fade-in">
-        <span class="text-gray-500 dark:text-gray-400">Đang lọc:</span>
-        <span class="px-3 py-1 bg-emerald-100 text-emerald-700 rounded-full font-bold text-sm flex items-center gap-2">
-            <i class="fas fa-tag"></i> {{ current_label }}
-            <a href="{% url 'note-list' %}" class="hover:text-emerald-900 ml-1"><i class="fas fa-times-circle"></i></a>
-        </span>
-    </div>
-    {% endif %}
-
-    <div class="max-w-2xl mx-auto mb-12 relative z-50">
-      <div x-show="isFormOpen" @click="closeForm()" x-transition.opacity class="fixed inset-0 bg-gray-900/20 dark:bg-black/40 backdrop-blur-[2px] z-[-1]"></div>
-
-      <div class="rounded-2xl shadow-xl transition-all duration-300 border border-gray-200 dark:border-gray-700 overflow-hidden" 
-           :class="{'bg-white dark:bg-[#1e293b]': !noteColor, 'scale-[1.02] shadow-2xl ring-4 ring-emerald-500/10': isFormOpen}" 
-           :style="noteColor ? `background-color: ${noteColor}` : ''">
-        
-        <input type="file" x-ref="fileInput" @change="handleFileUpload($event)" class="hidden" accept="image/*" />
-
-        <div x-show="!isFormOpen" class="flex items-center justify-between p-3 cursor-text bg-white dark:bg-[#1e293b] hover:shadow-md transition-shadow group">
-          <div @click="openForm()" class="flex-1 text-gray-500 dark:text-gray-400 font-medium ml-2 py-1">
-              Tạo ghi chú...
-          </div>
-          <div class="flex items-center gap-1 text-gray-500 dark:text-gray-400">
-             <button @click="quickAddChecklist()" class="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-white/10 transition" title="Danh sách việc cần làm"><i class="far fa-check-square text-lg"></i></button>
-             <button @click="openForm()" class="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-white/10 transition" title="Vẽ (Demo)"><i class="fas fa-paint-brush text-lg"></i></button>
-             <button @click="quickAddImage()" class="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-white/10 transition" title="Hình ảnh"><i class="far fa-image text-lg"></i></button>
-          </div>
-        </div>
-
-        <div x-show="isFormOpen" x-transition x-cloak class="flex flex-col relative">
-            
-            <div x-show="imagePreview" class="relative w-full bg-gray-50 dark:bg-gray-900 group flex justify-center items-center border-b border-gray-100 dark:border-gray-700">
-                <img :src="imagePreview" class="block w-auto h-auto max-w-full max-h-[400px] object-contain shadow-sm" />
-                <button @click="removeImage()" class="absolute bottom-3 right-3 bg-white/90 hover:bg-red-50 text-red-600 p-2 rounded-lg shadow-md transition opacity-0 group-hover:opacity-100 z-10">
-                    <i class="fas fa-trash"></i>
-                </button>
+    <div class="flex flex-col gap-4 mb-8 sticky top-20 z-40 py-2 transition-all">
+      <div class="flex flex-col md:flex-row items-center gap-4">
+          <div class="relative w-full md:flex-1 group">
+            <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+              <i class="fas fa-search text-emerald-500"></i>
             </div>
-
-            <button @click="isPinned = !isPinned" class="absolute top-4 right-4 p-2 rounded-full hover:bg-black/10 dark:hover:bg-white/10 transition z-20" :class="isPinned ? 'text-emerald-600' : 'text-gray-500 dark:text-gray-300'">
-                <i class="fas fa-thumbtack text-xl" :class="{'rotate-45': !isPinned}"></i>
+            <input type="text" x-model="searchQuery" class="block w-full pl-11 pr-10 py-3.5 bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl border border-emerald-100 dark:border-gray-700 rounded-2xl text-gray-900 dark:text-white focus:ring-4 focus:ring-emerald-500/20 focus:border-emerald-500 shadow-sm" placeholder="Tìm kiếm ghi chú, công việc..." />
+          </div>
+    
+          <div class="flex items-center gap-3 w-full md:w-auto justify-end">
+            <button @click="toggleSelectionMode()" 
+                    :class="isSelectionMode ? 'bg-emerald-600 text-white' : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300'"
+                    class="p-3.5 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm transition-colors font-medium">
+                <span x-text="isSelectionMode ? 'Hủy chọn' : 'Chọn'"></span>
             </button>
 
-            <input type="text" x-model="title" placeholder="Tiêu đề" class="w-full bg-transparent border-none focus:ring-0 text-xl font-bold px-6 pt-6 pb-2 placeholder-gray-400 dark:text-white pr-12" />
-            
-            <div class="px-6 py-2 max-h-[60vh] overflow-y-auto custom-scrollbar relative">
-                <div x-show="!isCheckboxMode"
-                     id="editor" 
-                     contenteditable="true" 
-                     class="w-full bg-transparent outline-none text-base min-h-[80px] leading-relaxed dark:text-gray-200 empty:before:content-[attr(placeholder)] empty:before:text-gray-400 prose dark:prose-invert max-w-none" 
-                     placeholder="Ghi chú của bạn..." 
-                     @input="content = $el.innerHTML"></div>
-
-                <div x-show="isCheckboxMode" class="space-y-2">
-                    <template x-for="(item, index) in checkboxes" :key="index">
-                        <div class="flex items-center gap-2 group">
-                            <input type="checkbox" x-model="item.checked" class="w-4 h-4 text-emerald-600 rounded border-gray-300 focus:ring-emerald-500 dark:bg-gray-700 dark:border-gray-600">
-                            <input type="text" x-model="item.text" @keydown.enter.prevent="addCheckbox(index + 1)" @keydown.backspace="removeCheckbox(index)" class="flex-1 bg-transparent border-none focus:ring-0 p-0 text-base dark:text-gray-200" :class="{'line-through text-gray-400': item.checked}" placeholder="Việc cần làm...">
-                            <button @click="checkboxes.splice(index, 1)" class="text-gray-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition"><i class="fas fa-times"></i></button>
-                        </div>
-                    </template>
-                    <button @click="addCheckbox()" class="text-sm text-gray-500 hover:text-emerald-600 flex items-center gap-1 mt-2"><i class="fas fa-plus"></i> Thêm mục</button>
-                </div>
+            <div class="bg-white/80 dark:bg-gray-800/80 p-1 rounded-xl border border-gray-200 dark:border-gray-700 flex shadow-sm">
+                <button @click="viewMode = 'grid'" :class="viewMode === 'grid' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400' : 'text-gray-500'" class="p-2.5 rounded-lg transition-colors"><i class="fas fa-th-large"></i></button>
+                <button @click="viewMode = 'list'" :class="viewMode === 'list' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400' : 'text-gray-500'" class="p-2.5 rounded-lg transition-colors"><i class="fas fa-list"></i></button>
             </div>
+            <a href="{% url 'trash-list' %}" class="flex items-center gap-2 px-5 py-3.5 bg-white/80 dark:bg-gray-800/80 backdrop-blur-md text-gray-600 dark:text-gray-300 rounded-2xl border border-gray-200 dark:border-gray-700 hover:bg-red-50 hover:text-red-600 transition-all shadow-sm font-medium">
+              <i class="fas fa-trash-alt"></i> <span class="hidden sm:inline">Thùng rác</span>
+            </a>
+          </div>
+      </div>
 
-            <div class="px-6 py-1 flex flex-wrap gap-2 items-center" x-show="tags.length > 0 || newTag">
-                <template x-for="(tag, index) in tags" :key="index">
-                    <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-black/5 dark:bg-white/10 border border-black/5 dark:border-white/5 dark:text-gray-300">
-                        <span x-text="tag"></span>
-                        <button @click="removeTag(index)" class="ml-1.5 hover:text-red-500"><i class="fas fa-times"></i></button>
-                    </span>
-                </template>
-                <input type="text" x-model="newTag" @keydown.enter.prevent="addTag()" placeholder="+ Thẻ" class="bg-transparent border-none text-sm focus:ring-0 p-0 w-24 placeholder-gray-400 dark:text-gray-300" />
-            </div>
-            
-            <div class="px-6 pb-1 flex gap-4 text-xs text-gray-500 dark:text-gray-400 flex-wrap" x-show="reminderTime || sharedEmails">
-                <span x-show="reminderTime" class="flex items-center gap-1 bg-yellow-50 text-yellow-700 border border-yellow-200 px-2 py-1 rounded-lg"><i class="fas fa-clock"></i> <span x-text="formatDate(reminderTime)"></span> <button @click="reminderTime=''" class="ml-1 hover:text-red-600">×</button></span>
-                <span x-show="sharedEmails" class="flex items-center gap-1 bg-blue-50 text-blue-700 border border-blue-200 px-2 py-1 rounded-lg"><i class="fas fa-user-friends"></i> <span x-text="truncate(sharedEmails, 20)"></span> <button @click="sharedEmails=''" class="ml-1 hover:text-red-600">×</button></span>
-            </div>
-
-            <div x-show="showFormatTools && !isCheckboxMode" x-transition.origin.bottom class="px-4 py-2 bg-gray-50 dark:bg-black/30 border-t border-gray-200 dark:border-gray-700 flex gap-1 animate-slide-up">
-                <button @click="execCmd('bold')" class="p-1.5 rounded hover:bg-black/10 dark:hover:bg-white/10 text-gray-600 dark:text-gray-300 transition w-8" title="In đậm"><i class="fas fa-bold"></i></button>
-                <button @click="execCmd('italic')" class="p-1.5 rounded hover:bg-black/10 dark:hover:bg-white/10 text-gray-600 dark:text-gray-300 transition w-8" title="In nghiêng"><i class="fas fa-italic"></i></button>
-                <button @click="execCmd('underline')" class="p-1.5 rounded hover:bg-black/10 dark:hover:bg-white/10 text-gray-600 dark:text-gray-300 transition w-8" title="Gạch chân"><i class="fas fa-underline"></i></button>
-                <div class="w-px h-6 bg-gray-300 dark:bg-gray-600 mx-1"></div>
-                <button @click="execCmd('insertUnorderedList')" class="p-1.5 rounded hover:bg-black/10 dark:hover:bg-white/10 text-gray-600 dark:text-gray-300 transition w-8" title="Danh sách"><i class="fas fa-list-ul"></i></button>
-                <button @click="toggleCheckboxMode(); showFormatTools=false" class="p-1.5 rounded hover:bg-black/10 dark:hover:bg-white/10 text-gray-600 dark:text-gray-300 transition flex-1 text-xs font-medium text-left px-2">Hiện hộp kiểm</button>
-            </div>
-
-            <div class="flex items-center justify-between px-4 py-2 mt-1 border-t border-gray-100 dark:border-gray-700" :class="showFormatTools ? 'bg-gray-100 dark:bg-black/40' : 'bg-transparent'">
-                <div class="flex items-center gap-0.5">
-                    <button @click="showFormatTools = !showFormatTools" class="p-2 rounded-full hover:bg-black/10 dark:hover:bg-white/10 text-gray-500 dark:text-gray-400 transition" :class="{'bg-black/10 dark:bg-white/10 text-gray-900 dark:text-white': showFormatTools}" title="Tùy chọn định dạng"><i class="fas fa-font"></i></button>
-                    
-                    <div class="relative" x-data="{ showColor: false }">
-                        <button @click="showColor = !showColor" @click.outside="showColor = false" class="p-2 rounded-full hover:bg-black/10 dark:hover:bg-white/10 text-gray-500 dark:text-gray-400 transition" title="Màu nền"><i class="fas fa-palette"></i></button>
-                        <div x-show="showColor" class="absolute bottom-full left-0 mb-2 p-3 bg-white dark:bg-gray-800 rounded-2xl shadow-xl flex gap-2 z-50 border border-gray-200 dark:border-gray-700">
-                            <template x-for="c in colors"><button @click="noteColor = c.bg; showColor = false" class="w-6 h-6 rounded-full border border-black/10 hover:scale-110 transition" :style="`background-color: ${c.bg}`"></button></template>
-                        </div>
-                    </div>
-                    
-                    <button @click="$refs.fileInput.click()" class="p-2 rounded-full hover:bg-black/10 dark:hover:bg-white/10 text-gray-500 dark:text-gray-400 transition" title="Thêm ảnh"><i class="far fa-image"></i></button>
-                    
-                    <div class="relative" x-data="{ showReminder: false }">
-                        <button @click="showReminder = !showReminder" @click.outside="showReminder = false" class="p-2 rounded-full hover:bg-black/10 dark:hover:bg-white/10 text-gray-500 dark:text-gray-400 transition" :class="{'text-yellow-600': reminderTime}" title="Nhắc nhở"><i class="far fa-bell"></i></button>
-                        <div x-show="showReminder" class="absolute bottom-full left-0 mb-2 p-4 bg-white dark:bg-gray-800 rounded-2xl shadow-xl z-50 w-72 border border-gray-200 dark:border-gray-700">
-                            <h4 class="text-sm font-bold mb-2 dark:text-white">Đặt nhắc nhở</h4>
-                            <input type="datetime-local" x-model="reminderTime" class="w-full border rounded-xl p-2 text-sm dark:bg-gray-700 dark:text-white dark:border-gray-600">
-                        </div>
-                    </div>
-
-                    <div class="relative" x-data="{ showShare: false }">
-                        <button @click="showShare = !showShare" @click.outside="showShare = false" class="p-2 rounded-full hover:bg-black/10 dark:hover:bg-white/10 text-gray-500 dark:text-gray-400 transition" :class="{'text-blue-600': sharedEmails}" title="Chia sẻ"><i class="fas fa-user-plus"></i></button>
-                        <div x-show="showShare" class="absolute bottom-full left-0 mb-2 p-4 bg-white dark:bg-gray-800 rounded-2xl shadow-xl z-50 w-80 border border-gray-200 dark:border-gray-700">
-                            <h4 class="text-sm font-bold mb-2 dark:text-white">Chia sẻ với (Email)</h4>
-                            <input type="text" x-model="sharedEmails" placeholder="email@example.com" class="w-full border rounded-xl p-2 text-sm dark:bg-gray-700 dark:text-white dark:border-gray-600">
-                        </div>
-                    </div>
-                    
-                    <button class="p-2 rounded-full hover:bg-black/10 dark:hover:bg-white/10 text-gray-500 dark:text-gray-400 transition" title="Thêm"><i class="fas fa-ellipsis-v text-sm px-1.5"></i></button>
-                </div>
-
-                <div>
-                    <button @click="closeForm()" class="px-5 py-1.5 text-sm font-semibold rounded hover:bg-black/5 dark:hover:bg-white/10 text-gray-600 dark:text-gray-300 transition">Đóng</button>
-                </div>
-            </div>
-        </div>
+      <div class="flex gap-2 overflow-x-auto pb-2 no-scrollbar">
+          <button @click="filterStatus = 'all'" :class="filterStatus === 'all' ? 'bg-gray-800 text-white dark:bg-white dark:text-gray-900' : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-gray-700'" class="px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-colors">Tất cả</button>
+          <button @click="filterStatus = 'todo'" :class="filterStatus === 'todo' ? 'bg-blue-600 text-white border-blue-600' : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-gray-700'" class="px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-colors flex items-center gap-2"><div class="w-2 h-2 rounded-full bg-blue-500"></div> Cần làm</button>
+          <button @click="filterStatus = 'doing'" :class="filterStatus === 'doing' ? 'bg-yellow-500 text-white border-yellow-500' : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-gray-700'" class="px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-colors flex items-center gap-2"><div class="w-2 h-2 rounded-full bg-yellow-400"></div> Đang làm</button>
+          <button @click="filterStatus = 'overdue'" :class="filterStatus === 'overdue' ? 'bg-red-600 text-white border-red-600' : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-gray-700'" class="px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-colors flex items-center gap-2"><div class="w-2 h-2 rounded-full bg-red-500"></div> Trễ hạn</button>
+          <button @click="filterStatus = 'done'" :class="filterStatus === 'done' ? 'bg-emerald-600 text-white border-emerald-600' : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-gray-700'" class="px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-colors flex items-center gap-2"><div class="w-2 h-2 rounded-full bg-emerald-500"></div> Hoàn thành</button>
       </div>
     </div>
 
-    <div :class="viewMode === 'grid' ? 'columns-1 sm:columns-2 lg:columns-3 xl:columns-4 gap-4 space-y-4' : 'flex flex-col gap-3 max-w-4xl mx-auto'" class="pb-20">
+    <div x-show="isSelectionMode && selectedIds.length > 0" 
+         x-transition.move.bottom
+         class="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-white dark:bg-gray-800 shadow-2xl rounded-full px-6 py-3 border border-gray-200 dark:border-gray-700 flex items-center gap-4">
+        <span class="text-sm font-bold text-gray-700 dark:text-white"><span x-text="selectedIds.length"></span> đã chọn</span>
+        <div class="h-4 w-px bg-gray-300 dark:bg-gray-600"></div>
+        <button @click="selectAll()" class="text-sm font-medium text-gray-600 dark:text-gray-300 hover:text-emerald-600">Chọn tất cả</button>
+        <button @click="performBulkAction('delete')" class="text-sm font-bold text-red-600 hover:text-red-700 flex items-center gap-1">
+            <i class="fas fa-trash-alt"></i> Xóa
+        </button>
+    </div>
+
+    <div id="notes-container" :class="viewMode === 'grid' ? 'columns-1 sm:columns-2 lg:columns-3 xl:columns-4 gap-4 space-y-4' : 'flex flex-col gap-3 max-w-4xl mx-auto'" class="pb-20">
       {% for note in notes %}
       <div
-        x-data="{ pinned: {{ note.is_pinned|yesno:'true,false' }} }"
-        @click="editNote({
+        x-data="{ 
+             pinned: {{ note.is_pinned|yesno:'true,false' }},
+             localColor: '{{ note.color|default:'' }}',
+             localReminder: '{{ note.reminder_time|default:'' }}',
+             localImg: '{{ note.image_url|default:'' }}'
+        }"
+        x-show="(filterStatus === 'all' || filterStatus === '{{ note.status|default:'todo' }}') && (!searchQuery || '{{ note.title|escapejs }}'.toLowerCase().includes(searchQuery.toLowerCase()) || '{{ note.content|escapejs }}'.toLowerCase().includes(searchQuery.toLowerCase()))"
+        
+        data-pinned="{{ note.is_pinned|yesno:'true,false' }}"
+        data-created="{{ note.created_at|date:'U' }}"
+        data-note-id="{{ note.id }}"
+        
+        @click="if(isSelectionMode) { toggleNoteSelection('{{ note.id }}') } else { editNote({
              id: '{{ note.id }}', 
              title: `{{ note.title|escapejs }}`, 
              content: `{{ note.content|escapejs }}`, 
-             color: '{{ note.color }}', 
-             is_pinned: {{ note.is_pinned|yesno:'true,false' }}, 
+             color: localColor, 
+             is_pinned: pinned, 
              labels: {{ note.labels|default:'[]' }}, 
-             image_url: '{{ note.image_url|default:'' }}',
-             reminder_time: '{{ note.reminder_time|default:'' }}',
+             image_url: localImg,
+             reminder_time: localReminder,
+             deadline: '{{ note.deadline|default:'' }}',
+             status: '{{ note.status|default:'todo' }}',
              shared_emails: ''
-         })"
-        class="break-inside-avoid group relative rounded-2xl border border-gray-200 dark:border-gray-700 p-4 transition-all duration-200 hover:shadow-lg cursor-pointer overflow-hidden flex flex-col"
-        :class="viewMode === 'grid' ? 'mb-4 hover:-translate-y-0.5' : ''"
-        style="{% if note.color %}background-color: {{ note.color }}{% else %}background-color: transparent{% endif %}"
-        class="{% if not note.color %}bg-white dark:bg-[#1e293b]{% endif %}"
+         }) }"
+        class="break-inside-avoid group relative rounded-2xl border p-4 transition-all duration-200 hover:shadow-lg cursor-pointer overflow-hidden flex flex-col"
+        :class="[
+            viewMode === 'grid' ? 'mb-4 hover:-translate-y-0.5' : '',
+            !localColor ? 'bg-white dark:bg-[#1e293b]' : '',
+            (isSelectionMode && selectedIds.includes('{{ note.id }}')) ? 'ring-4 ring-emerald-500 border-emerald-500' : 'border-gray-200 dark:border-gray-700'
+        ]"
+        :style="localColor ? `background-color: ${localColor}` : ''"
       >
+        <div x-show="isSelectionMode" class="absolute inset-0 z-50 bg-transparent flex items-start justify-end p-2 pointer-events-none">
+            <div class="w-6 h-6 rounded-full border-2 bg-white flex items-center justify-center transition-colors"
+                 :class="selectedIds.includes('{{ note.id }}') ? 'border-emerald-500 bg-emerald-500' : 'border-gray-300'">
+                 <i x-show="selectedIds.includes('{{ note.id }}')" class="fas fa-check text-white text-xs"></i>
+            </div>
+        </div>
+
         {% if not note.is_owner %}
         <div class="absolute top-3 left-3 z-20 bg-white/50 dark:bg-black/20 backdrop-blur-sm text-blue-700 dark:text-blue-300 text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1 shadow-sm">
             <i class="fas fa-share-alt"></i> {{ note.shared_label }}
         </div>
         {% endif %}
 
-        <button @click.stop="pinned = !pinned; updatePin('{{ note.id }}', pinned)" 
+        <button @click.stop="togglePin('{{ note.id }}', pinned, $el).then(newState => pinned = newState)" 
             class="absolute top-3 right-3 z-20 p-2 rounded-full hover:bg-black/10 dark:hover:bg-white/10 transition-all duration-200"
             :class="[
                 pinned ? 'opacity-100' : 'opacity-0 group-hover:opacity-100',
-                {% if note.color %} (pinned ? 'text-gray-900' : 'text-gray-600') {% else %} (pinned ? 'text-emerald-500' : 'text-gray-400') {% endif %}
+                localColor 
+                    ? (pinned ? 'text-emerald-800' : 'text-gray-800') 
+                    : (pinned ? 'text-emerald-500' : 'text-gray-400')
             ]">
           <i class="fas fa-thumbtack text-sm transition-transform" :class="{'rotate-45': !pinned}"></i>
         </button>
 
-        {% if note.image_url %}
-        <div class="-mx-4 -mt-4 mb-3">
-          <img src="{{ note.image_url }}" class="w-full h-auto object-cover border-b border-black/5 dark:border-white/5" loading="lazy" />
+        <div class="-mx-4 -mt-4 mb-3" x-show="localImg">
+          <img :src="localImg" class="w-full h-auto object-cover border-b border-black/5 dark:border-white/5" loading="lazy" />
+        </div>
+
+        {% if note.title %}
+        <h3 class="font-bold mb-1 text-lg leading-snug pr-6 break-words" 
+            :class="localColor ? 'text-gray-900' : 'text-gray-900 dark:text-gray-100'">
+            {{ note.title }}
+        </h3>
+        {% endif %}
+
+        {% if note.status and note.status != 'todo' or note.deadline %}
+        <div class="flex flex-wrap gap-2 mb-2 mt-1">
+            {% if note.status == 'doing' %}
+                <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200 border border-yellow-200 dark:border-yellow-800">ĐANG LÀM</span>
+            {% elif note.status == 'done' %}
+                <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200 border border-emerald-200 dark:border-emerald-800">HOÀN THÀNH</span>
+            {% elif note.status == 'overdue' %}
+                <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200 border border-red-200 dark:border-red-800 flex items-center gap-1">
+                    <i class="fas fa-exclamation-circle"></i> TRỄ HẠN
+                </span>
+            {% endif %}
+            
+            {% if note.deadline %}
+                <span class="text-[10px] font-bold px-2 py-0.5 rounded flex items-center gap-1 border {% if note.deadline < now_iso and note.status != 'done' %}bg-red-100 text-red-800 border-red-200{% else %}bg-gray-100 text-gray-700 border-gray-200{% endif %}">
+                    <i class="fas fa-flag"></i> {{ note.deadline|slice:"11:16" }} {{ note.deadline|slice:"8:10" }}/{{ note.deadline|slice:"5:7" }}
+                </span>
+            {% endif %}
         </div>
         {% endif %}
 
-        {% if note.title %}
-        <h3 class="font-bold mb-1 text-lg leading-snug pr-6 break-words {% if note.color %}text-gray-900{% else %}text-gray-900 dark:text-gray-100{% endif %}">{{ note.title }}</h3>
-        {% endif %}
-
-        <div class="rich-text-content whitespace-pre-line text-[15px] leading-relaxed break-words mb-2 flex-grow {% if note.color %}text-gray-800{% else %}text-gray-600 dark:text-gray-300{% endif %}">
+        <div class="rich-text-content whitespace-pre-line text-[15px] leading-relaxed break-words mb-2 flex-grow" 
+             :class="localColor ? 'text-gray-900' : 'text-gray-600 dark:text-gray-300'">
             {% if '{"type":"checklist"' in note.content %}
                 <ul class="space-y-1 mt-1">
                      <div x-data="{ items: JSON.parse('{{ note.content|escapejs }}').data }">
@@ -233,40 +179,62 @@
             {% if note.labels %}
             <div class="flex flex-wrap gap-1.5">
             {% for tag in note.labels %}
-            <a href="{% url 'label-filter' tag %}" @click.stop class="px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider bg-black/5 dark:bg-white/10 border border-black/5 dark:border-white/5 hover:bg-black/10 transition-colors {% if note.color %}text-gray-800{% else %}text-gray-500 dark:text-gray-400{% endif %}">
+            <a href="{% url 'label-filter' tag %}" @click.stop class="px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider bg-black/5 dark:bg-white/10 border border-black/5 dark:border-white/5 hover:bg-black/10 transition-colors" 
+               :class="localColor ? 'text-gray-900 border-black/10' : 'text-gray-500 dark:text-gray-400 border-black/5 dark:border-white/5'">
                 {{ tag }}
             </a>
             {% endfor %}
             </div>
             {% endif %}
 
-            {% if note.reminder_time %}
-            <span class="text-[10px] bg-white/50 backdrop-blur-sm text-yellow-800 border border-yellow-200/50 px-1.5 py-0.5 rounded-md flex items-center gap-1 shadow-sm">
-                <i class="far fa-clock"></i> {{ note.reminder_time|slice:"11:16" }} {{ note.reminder_time|slice:"8:10" }}/{{ note.reminder_time|slice:"5:7" }}
+            <span x-show="localReminder" class="text-[10px] bg-white/50 backdrop-blur-sm text-yellow-800 border border-yellow-200/50 px-1.5 py-0.5 rounded-md flex items-center gap-1 shadow-sm">
+                <i class="far fa-clock"></i> <span x-text="formatDate(localReminder)"></span>
             </span>
-            {% endif %}
         </div>
         
         <div class="mt-auto pt-2 flex items-center justify-between opacity-0 group-hover:opacity-100 transition-opacity duration-200 ease-in-out">
             <div class="flex items-center gap-0.5">
-                <button class="p-2 rounded-full hover:bg-black/10 dark:hover:bg-white/10 text-gray-500 dark:text-gray-400 transition" title="Nhắc tôi (Sắp ra mắt)">
-                    <i class="far fa-bell text-xs"></i>
-                </button>
-                <button class="p-2 rounded-full hover:bg-black/10 dark:hover:bg-white/10 text-gray-500 dark:text-gray-400 transition" title="Cộng tác viên (Sắp ra mắt)">
-                    <i class="fas fa-user-plus text-xs"></i>
-                </button>
-                <button class="p-2 rounded-full hover:bg-black/10 dark:hover:bg-white/10 text-gray-500 dark:text-gray-400 transition" title="Đổi màu (Sắp ra mắt)">
-                    <i class="fas fa-palette text-xs"></i>
-                </button>
-                <button class="p-2 rounded-full hover:bg-black/10 dark:hover:bg-white/10 text-gray-500 dark:text-gray-400 transition" title="Thêm ảnh (Sắp ra mắt)">
-                    <i class="far fa-image text-xs"></i>
-                </button>
+                <div class="relative" x-data="{ open: false }" @click.outside="open = false" @click.stop>
+                    <button @click="open = !open" class="p-2 rounded-full hover:bg-black/10 dark:hover:bg-white/10 transition" 
+                            :class="[localColor ? 'text-gray-800' : 'text-gray-500 dark:text-gray-400', {'text-yellow-600': localReminder}]" title="Nhắc nhở">
+                        <i class="far fa-bell text-xs"></i>
+                    </button>
+                    <div x-show="open" x-transition class="absolute bottom-full left-0 mb-2 p-3 bg-white dark:bg-gray-800 rounded-xl shadow-xl z-30 w-64 border border-gray-200 dark:border-gray-700">
+                        <label class="text-[10px] font-bold text-gray-400 block mb-1">CHỌN NGÀY GIỜ</label>
+                        <input type="datetime-local" x-model="localReminder" @change="quickUpdate('{{ note.id }}', {reminder: localReminder})" class="w-full text-xs p-1.5 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                        <button @click="localReminder=''; quickUpdate('{{ note.id }}', {reminder: ''}); open=false" class="mt-2 w-full py-1 text-xs text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded">Xóa nhắc nhở</button>
+                    </div>
+                </div>
+
+                <div class="relative" x-data="{ open: false }" @click.outside="open = false" @click.stop>
+                    <button @click="open = !open" class="p-2 rounded-full hover:bg-black/10 dark:hover:bg-white/10 transition" 
+                            :class="localColor ? 'text-gray-800' : 'text-gray-500 dark:text-gray-400'" title="Đổi màu">
+                        <i class="fas fa-palette text-xs"></i>
+                    </button>
+                    <div x-show="open" x-transition class="absolute bottom-full left-0 mb-2 p-2 bg-white dark:bg-gray-800 rounded-xl shadow-xl z-30 flex gap-1 border border-gray-200 dark:border-gray-700 min-w-[150px] flex-wrap">
+                        <template x-for="c in colors">
+                            <button @click="localColor = c.bg; quickUpdate('{{ note.id }}', {color: c.bg}); open = false" 
+                                    class="w-5 h-5 rounded-full border border-black/10 hover:scale-110 transition" 
+                                    :style="`background-color: ${c.bg}`"></button>
+                        </template>
+                    </div>
+                </div>
+                
+                <div @click.stop>
+                    <button @click="$refs.uploader.click()" class="p-2 rounded-full hover:bg-black/10 dark:hover:bg-white/10 transition" 
+                            :class="localColor ? 'text-gray-800' : 'text-gray-500 dark:text-gray-400'" title="Thêm ảnh">
+                        <i class="far fa-image text-xs"></i>
+                    </button>
+                    <input type="file" x-ref="uploader" class="hidden" accept="image/*" 
+                           @change="localImg = URL.createObjectURL($event.target.files[0]); quickUploadImage('{{ note.id }}', $event.target.files[0])">
+                </div>
             </div>
 
             <div class="relative">
                  <a href="{% url 'note-delete' note.id %}" 
                     onclick="event.stopPropagation(); return confirm('Chuyển vào thùng rác?')" 
-                    class="p-2 rounded-full hover:bg-black/10 dark:hover:bg-white/10 text-gray-500 hover:text-red-600 dark:text-gray-400 dark:hover:text-red-400 transition flex items-center justify-center"
+                    class="p-2 rounded-full hover:bg-black/10 dark:hover:bg-white/10 hover:text-red-600 dark:hover:text-red-400 transition flex items-center justify-center"
+                    :class="localColor ? 'text-gray-800' : 'text-gray-500 dark:text-gray-400'"
                     title="Xóa ghi chú">
                      <i class="fas fa-trash-alt text-xs"></i>
                  </a>
@@ -274,6 +242,179 @@
         </div>
       </div>
       {% endfor %}
+    </div>
+
+    <div class="max-w-2xl mx-auto mb-12 relative z-50">
+      <div x-show="isFormOpen" @click="closeForm()" x-transition.opacity class="fixed inset-0 bg-gray-900/20 dark:bg-black/40 backdrop-blur-[2px] z-[-1]"></div>
+
+      <div class="rounded-2xl shadow-xl transition-all duration-300 border border-gray-200 dark:border-gray-700 overflow-hidden" 
+           :class="{'bg-white dark:bg-[#1e293b]': !noteColor, 'scale-[1.02] shadow-2xl ring-4 ring-emerald-500/10': isFormOpen}" 
+           :style="noteColor ? `background-color: ${noteColor}` : ''">
+        
+        <input type="file" x-ref="fileInput" @change="handleFileUpload($event)" class="hidden" accept="image/*" />
+
+        <div x-show="!isFormOpen" class="flex items-center justify-between p-3 cursor-text bg-white dark:bg-[#1e293b] hover:shadow-md transition-shadow group">
+          <div @click="openForm()" class="flex-1 text-gray-500 dark:text-gray-400 font-medium ml-2 py-1">
+              Tạo ghi chú...
+          </div>
+          <div class="flex items-center gap-1 text-gray-500 dark:text-gray-400">
+             <button @click="quickAddChecklist()" class="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-white/10 transition" title="Danh sách việc cần làm"><i class="far fa-check-square text-lg"></i></button>
+             <button @click="quickAddImage()" class="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-white/10 transition" title="Hình ảnh"><i class="far fa-image text-lg"></i></button>
+          </div>
+        </div>
+
+        <div x-show="isFormOpen" x-transition x-cloak class="flex flex-col relative">
+            <div x-show="imagePreview" class="relative w-full bg-gray-50 dark:bg-gray-900 group flex justify-center items-center border-b border-gray-100 dark:border-gray-700">
+                <img :src="imagePreview" class="block w-auto h-auto max-w-full max-h-[400px] object-contain shadow-sm" />
+                <button @click="removeImage()" class="absolute bottom-3 right-3 bg-white/90 hover:bg-red-50 text-red-600 p-2 rounded-lg shadow-md transition opacity-0 group-hover:opacity-100 z-10"><i class="fas fa-trash"></i></button>
+            </div>
+
+            <button @click="isPinned = !isPinned" class="absolute top-4 right-4 p-2 rounded-full hover:bg-black/10 dark:hover:bg-white/10 transition z-20" 
+                    :class="[
+                        isPinned ? 'opacity-100' : 'opacity-100',
+                        noteColor 
+                            ? (isPinned ? 'text-emerald-800' : 'text-gray-800') 
+                            : (isPinned ? 'text-emerald-500' : 'text-gray-300')
+                    ]">
+                <i class="fas fa-thumbtack text-xl" :class="{'rotate-45': !isPinned}"></i>
+            </button>
+
+            <input type="text" x-model="title" placeholder="Tiêu đề" 
+                   class="w-full bg-transparent border-none focus:ring-0 text-xl font-bold px-6 pt-6 pb-2 pr-12" 
+                   :class="noteColor ? 'text-gray-900 placeholder-gray-600' : 'text-gray-900 dark:text-white placeholder-gray-400'" />
+            
+            <div class="px-6 py-2 max-h-[60vh] overflow-y-auto custom-scrollbar relative">
+                <div x-show="!isCheckboxMode" id="editor" contenteditable="true" 
+                     class="w-full bg-transparent outline-none text-base min-h-[80px] leading-relaxed empty:before:content-[attr(placeholder)] prose max-w-none" 
+                     :class="noteColor ? 'text-gray-900 empty:before:text-gray-600' : 'text-gray-900 dark:text-gray-200 empty:before:text-gray-400 dark:prose-invert'"
+                     placeholder="Ghi chú của bạn..." @input="content = $el.innerHTML"></div>
+                
+                <div x-show="isCheckboxMode" class="space-y-2">
+                    <template x-for="(item, index) in checkboxes" :key="index">
+                        <div class="flex items-center gap-2 group">
+                            <input type="checkbox" x-model="item.checked" class="w-4 h-4 text-emerald-600 rounded border-gray-300 focus:ring-emerald-500 dark:bg-gray-700 dark:border-gray-600">
+                            <input type="text" x-model="item.text" @keydown.enter.prevent="addCheckbox(index + 1)" @keydown.backspace="removeCheckbox(index)" 
+                                   class="flex-1 bg-transparent border-none focus:ring-0 p-0 text-base" 
+                                   :class="{'line-through text-gray-500': item.checked, 'text-gray-900': noteColor && !item.checked, 'text-gray-900 dark:text-gray-200': !noteColor && !item.checked}"
+                                   placeholder="Việc cần làm...">
+                            <button @click="checkboxes.splice(index, 1)" class="text-gray-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition"><i class="fas fa-times"></i></button>
+                        </div>
+                    </template>
+                    <button @click="addCheckbox()" class="text-sm text-gray-500 hover:text-emerald-600 flex items-center gap-1 mt-2"><i class="fas fa-plus"></i> Thêm mục</button>
+                </div>
+            </div>
+
+            <div class="px-6 py-1 flex flex-wrap gap-2 items-center" x-show="tags.length > 0 || newTag">
+                <template x-for="(tag, index) in tags" :key="index">
+                    <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-black/5 dark:bg-white/10 border border-black/5 dark:border-white/5" 
+                          :class="noteColor ? 'text-gray-900 dark:text-gray-900' : 'dark:text-gray-300'">
+                        <span x-text="tag"></span><button @click="removeTag(index)" class="ml-1.5 hover:text-red-500"><i class="fas fa-times"></i></button>
+                    </span>
+                </template>
+                <input type="text" x-model="newTag" @keydown.enter.prevent="addTag()" placeholder="+ Thẻ" class="bg-transparent border-none text-sm focus:ring-0 p-0 w-24 placeholder-gray-400" :class="noteColor ? 'text-gray-900' : 'dark:text-gray-300'" />
+            </div>
+            
+            <div class="px-6 pb-1 flex gap-4 text-xs text-gray-500 dark:text-gray-400 flex-wrap" x-show="reminderTime || sharedEmails">
+                <span x-show="reminderTime" class="flex items-center gap-1 bg-yellow-50 text-yellow-700 border border-yellow-200 px-2 py-1 rounded-lg"><i class="fas fa-clock"></i> <span x-text="formatDate(reminderTime)"></span> <button @click="reminderTime=''" class="ml-1 hover:text-red-600">×</button></span>
+                <span x-show="sharedEmails" class="flex items-center gap-1 bg-blue-50 text-blue-700 border border-blue-200 px-2 py-1 rounded-lg"><i class="fas fa-user-friends"></i> <span x-text="truncate(sharedEmails, 20)"></span> <button @click="sharedEmails=''" class="ml-1 hover:text-red-600">×</button></span>
+            </div>
+
+            <div class="px-6 pb-1 flex gap-2 text-xs flex-wrap" x-show="deadline || status !== 'todo'">
+                <span x-show="status === 'todo'" class="bg-blue-100 text-blue-700 px-2 py-1 rounded-md font-bold">Cần làm</span>
+                <span x-show="status === 'doing'" class="bg-yellow-100 text-yellow-700 px-2 py-1 rounded-md font-bold">Đang làm</span>
+                <span x-show="status === 'done'" class="bg-emerald-100 text-emerald-700 px-2 py-1 rounded-md font-bold">Hoàn thành</span>
+                <span x-show="status === 'overdue'" class="bg-red-100 text-red-700 px-2 py-1 rounded-md font-bold">Trễ hạn</span>
+                <span x-show="deadline" class="flex items-center gap-1 bg-red-50 text-red-700 border border-red-200 px-2 py-1 rounded-lg"><i class="fas fa-hourglass-half"></i> <span x-text="formatDate(deadline)"></span></span>
+            </div>
+
+            <div x-show="showFormatTools && !isCheckboxMode" x-transition.origin.bottom class="px-4 py-2 bg-gray-50 dark:bg-black/30 border-t border-gray-200 dark:border-gray-700 flex gap-1 animate-slide-up">
+                <button @click="execCmd('bold')" class="p-1.5 rounded hover:bg-black/10 dark:hover:bg-white/10 transition w-8" :class="noteColor ? 'text-gray-900' : 'text-gray-600 dark:text-gray-300'" title="In đậm"><i class="fas fa-bold"></i></button>
+                <button @click="execCmd('italic')" class="p-1.5 rounded hover:bg-black/10 dark:hover:bg-white/10 transition w-8" :class="noteColor ? 'text-gray-900' : 'text-gray-600 dark:text-gray-300'" title="In nghiêng"><i class="fas fa-italic"></i></button>
+                <button @click="execCmd('underline')" class="p-1.5 rounded hover:bg-black/10 dark:hover:bg-white/10 transition w-8" :class="noteColor ? 'text-gray-900' : 'text-gray-600 dark:text-gray-300'" title="Gạch chân"><i class="fas fa-underline"></i></button>
+            </div>
+
+            <div class="flex items-center justify-between px-4 py-2 mt-1 border-t transition-colors" 
+                 :class="[
+                    showFormatTools ? 'bg-gray-100 dark:bg-black/40' : 'bg-transparent',
+                    noteColor ? 'border-black/10' : 'border-gray-100 dark:border-gray-700'
+                 ]">
+                <div class="flex items-center gap-0.5">
+                    <button @click="showFormatTools = !showFormatTools" class="p-2 rounded-full hover:bg-black/10 dark:hover:bg-white/10 transition" 
+                            :class="[
+                                noteColor ? 'text-gray-900' : 'text-gray-500 dark:text-gray-400',
+                                showFormatTools ? (noteColor ? 'bg-black/10' : 'bg-black/10 dark:bg-white/10 text-gray-900 dark:text-white') : ''
+                            ]" title="Tùy chọn định dạng"><i class="fas fa-font"></i></button>
+
+                    <button @click="toggleCheckboxMode()" class="p-2 rounded-full hover:bg-black/10 dark:hover:bg-white/10 transition" 
+                            :class="[
+                                isCheckboxMode ? 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400' : (noteColor ? 'text-gray-900' : 'text-gray-500 dark:text-gray-400')
+                            ]" title="Hộp kiểm (Todo)"><i class="fas fa-check-square"></i></button>
+                    
+                    <div class="relative" x-data="{ showColor: false }" @click.outside="showColor = false">
+                        <button @click="showColor = !showColor" class="p-2 rounded-full hover:bg-black/10 dark:hover:bg-white/10 transition" 
+                                :class="noteColor ? 'text-gray-900' : 'text-gray-500 dark:text-gray-400'" title="Màu nền"><i class="fas fa-palette"></i></button>
+                        <div x-show="showColor" class="absolute bottom-full left-0 mb-2 p-3 bg-white dark:bg-gray-800 rounded-2xl shadow-xl flex gap-2 z-50 border border-gray-200 dark:border-gray-700">
+                            <template x-for="c in colors"><button @click="noteColor = c.bg; showColor = false" class="w-6 h-6 rounded-full border border-black/10 hover:scale-110 transition" :style="`background-color: ${c.bg}`"></button></template>
+                        </div>
+                    </div>
+                    
+                    <button @click="$refs.fileInput.click()" class="p-2 rounded-full hover:bg-black/10 dark:hover:bg-white/10 transition" 
+                            :class="noteColor ? 'text-gray-900' : 'text-gray-500 dark:text-gray-400'" title="Thêm ảnh"><i class="far fa-image"></i></button>
+                    
+                    <div class="relative" x-data="{ showTask: false }" @click.outside="showTask = false">
+                        <button @click="showTask = !showTask" class="p-2 rounded-full hover:bg-black/10 dark:hover:bg-white/10 transition" 
+                                :class="[
+                                    noteColor ? 'text-gray-900' : 'text-gray-500 dark:text-gray-400',
+                                    (deadline || status !== 'todo') ? 'text-emerald-600' : ''
+                                ]" title="Cài đặt công việc"><i class="fas fa-calendar-check"></i></button>
+                        <div x-show="showTask" class="absolute bottom-full left-0 mb-2 p-4 bg-white dark:bg-gray-800 rounded-2xl shadow-xl z-50 w-72 border border-gray-200 dark:border-gray-700 space-y-3">
+                            <div>
+                                <label class="text-xs font-bold text-gray-500 dark:text-gray-400 block mb-1">TRẠNG THÁI</label>
+                                <select x-model="status" class="w-full border rounded-xl p-2 text-sm dark:bg-gray-700 dark:text-white dark:border-gray-600 focus:ring-2 focus:ring-emerald-500 outline-none">
+                                    <option value="todo">Cần làm</option>
+                                    <option value="doing">Đang làm</option>
+                                    <option value="done">Hoàn thành</option>
+                                    <option value="overdue">Trễ hạn</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="text-xs font-bold text-gray-500 dark:text-gray-400 block mb-1">HẠN CHÓT (DEADLINE)</label>
+                                <input type="datetime-local" x-model="deadline" class="w-full border rounded-xl p-2 text-sm dark:bg-gray-700 dark:text-white dark:border-gray-600 outline-none focus:ring-2 focus:ring-emerald-500">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="relative" x-data="{ showReminder: false }" @click.outside="showReminder = false">
+                        <button @click="showReminder = !showReminder" class="p-2 rounded-full hover:bg-black/10 dark:hover:bg-white/10 transition" 
+                                :class="[
+                                    noteColor ? 'text-gray-900' : 'text-gray-500 dark:text-gray-400',
+                                    reminderTime ? 'text-yellow-600' : ''
+                                ]" title="Nhắc nhở"><i class="far fa-bell"></i></button>
+                        <div x-show="showReminder" class="absolute bottom-full left-0 mb-2 p-4 bg-white dark:bg-gray-800 rounded-2xl shadow-xl z-50 w-72 border border-gray-200 dark:border-gray-700">
+                            <h4 class="text-sm font-bold mb-2 dark:text-white">Đặt nhắc nhở</h4>
+                            <input type="datetime-local" x-model="reminderTime" class="w-full border rounded-xl p-2 text-sm dark:bg-gray-700 dark:text-white dark:border-gray-600">
+                        </div>
+                    </div>
+                    
+                    <div class="relative" x-data="{ showMore: false }" @click.outside="showMore = false">
+                        <button @click="showMore = !showMore" class="p-2 rounded-full hover:bg-black/10 dark:hover:bg-white/10 transition" 
+                                :class="noteColor ? 'text-gray-900' : 'text-gray-500 dark:text-gray-400'" title="Thêm"><i class="fas fa-ellipsis-v text-sm px-1.5"></i></button>
+                        <div x-show="showMore" x-cloak class="absolute bottom-full right-0 mb-2 w-40 bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-200 dark:border-gray-700 py-1 z-50 overflow-hidden">
+                             <a href="#" x-show="currentNoteId" @click.prevent="if(confirm('Chuyển ghi chú này vào thùng rác?')) { window.location.href = '{% url 'note-delete' '00000' %}'.replace('00000', currentNoteId); }" class="block px-4 py-2 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 transition">
+                                <i class="fas fa-trash-alt mr-2"></i> Xóa ghi chú
+                             </a>
+                             <span x-show="!currentNoteId" class="block px-4 py-2 text-xs text-gray-400 italic text-center">Chưa có tùy chọn</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <button @click="closeForm()" class="px-5 py-1.5 text-sm font-semibold rounded hover:bg-black/5 dark:hover:bg-white/10 transition" 
+                            :class="noteColor ? 'text-gray-900' : 'text-gray-600 dark:text-gray-300'">Đóng</button>
+                </div>
+            </div>
+        </div>
+      </div>
     </div>
   </div>
 </div>
@@ -286,5 +427,7 @@
   .rich-text-content ol, #editor ol { list-style-type: decimal; margin-left: 1.2rem; }
   .rich-text-content b, #editor b { font-weight: 800; }
   .break-inside-avoid { break-inside: avoid; }
+  .no-scrollbar::-webkit-scrollbar { display: none; }
+  .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 </style>
 {% endblock %}
