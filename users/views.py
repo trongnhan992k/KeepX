@@ -1,8 +1,12 @@
 from django.shortcuts import render, redirect
 from django.contrib import messages
 from django.conf import settings
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
 import requests
-import urllib.parse  # <--- THÊM IMPORT NÀY
+import urllib.parse
+import json
+import time
 from .forms import (
     RegisterForm,
     LoginForm,
@@ -37,7 +41,7 @@ def _get_user_display_info(uid):
             
             # Tạo avatar mặc định nếu không có ảnh
             if not avatar:
-                # Mã hóa tên tiếng Việt sang dạng URL an toàn (Ví dụ: Nguyễn -> Nguy%E1%BB%85n)
+                # Mã hóa tên tiếng Việt sang dạng URL an toàn
                 safe_username = urllib.parse.quote(username)
                 avatar = f"https://ui-avatars.com/api/?name={safe_username}&background=random&color=fff&size=256"
                 
@@ -45,7 +49,6 @@ def _get_user_display_info(uid):
     except Exception as e:
         print(f"Lỗi lấy info user: {e}")
     
-    # Fallback mặc định
     return "User", "https://ui-avatars.com/api/?name=User&background=random&color=fff"
 
 
@@ -90,7 +93,7 @@ def register(request):
 
 
 # ==========================================
-# 2. ĐĂNG NHẬP
+# 2. ĐĂNG NHẬP (PASSWORD)
 # ==========================================
 def login_view(request):
     if request.session.get("uid"):
@@ -120,7 +123,11 @@ def login_view(request):
 
             if not email_to_login:
                 messages.error(request, "Tên đăng nhập hoặc Email không tồn tại!")
-                return render(request, "users/login.html", {"form": form})
+                # [QUAN TRỌNG] Truyền API KEY ngay cả khi lỗi để JS không bị crash
+                return render(request, "users/login.html", {
+                    "form": form,
+                    "FIREBASE_WEB_API_KEY": FIREBASE_WEB_API_KEY
+                })
 
             rest_api_url = f"https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key={FIREBASE_WEB_API_KEY}"
             payload = {
@@ -176,7 +183,69 @@ def login_view(request):
     else:
         form = LoginForm()
 
-    return render(request, "users/login.html", {"form": form})
+    # [QUAN TRỌNG] Truyền API KEY xuống template để các nút Google/Facebook hoạt động
+    return render(request, "users/login.html", {
+        "form": form,
+        "FIREBASE_WEB_API_KEY": FIREBASE_WEB_API_KEY
+    })
+
+
+# ==========================================
+# 2.1. ĐĂNG NHẬP MẠNG XÃ HỘI (GOOGLE/FACEBOOK)
+# ==========================================
+@csrf_exempt
+def social_login(request):
+    if request.method == "POST":
+        try:
+            body = json.loads(request.body)
+            id_token = body.get("idToken")
+
+            if not id_token:
+                return JsonResponse({"status": "error", "message": "Thiếu Token"}, status=400)
+
+            # 1. Xác thực Token với Firebase Admin SDK
+            decoded_token = auth.verify_id_token(id_token)
+            uid = decoded_token["uid"]
+            email = decoded_token.get("email", "")
+            name = decoded_token.get("name", "User")
+            picture = decoded_token.get("picture", "")
+
+            # 2. Kiểm tra hoặc tạo User trong Firestore
+            user_ref = db.collection("users").document(uid)
+            user_doc = user_ref.get()
+
+            if not user_doc.exists:
+                if not picture:
+                    safe_username = urllib.parse.quote(name)
+                    picture = f"https://ui-avatars.com/api/?name={safe_username}&background=random&color=fff"
+
+                user_data = {
+                    "username": name,
+                    "email": email,
+                    "avatar_url": picture,
+                    "created_at": firestore.SERVER_TIMESTAMP,
+                    "is_new_user": True,
+                    "auth_provider": "social"
+                }
+                user_ref.set(user_data)
+            else:
+                # Cập nhật avatar nếu có thay đổi từ mxh
+                if picture:
+                    user_ref.update({"avatar_url": picture})
+
+            # 3. Tạo Session Django
+            request.session["uid"] = uid
+            request.session["user_email"] = email
+            request.session.set_expiry(1209600) 
+
+            messages.success(request, f"Xin chào, {name}!")
+            return JsonResponse({"status": "success", "redirect_url": "/notes/"})
+
+        except Exception as e:
+            print(f"Social Login Error: {e}")
+            return JsonResponse({"status": "error", "message": str(e)}, status=500)
+    
+    return JsonResponse({"status": "error", "message": "Method not allowed"}, status=405)
 
 
 # ==========================================
@@ -227,15 +296,13 @@ def profile(request):
             if image_file:
                 try:
                     bucket = storage.bucket()
-                    # Lưu vào folder profile_pics
                     blob = bucket.blob(f"profile_pics/{uid}_{image_file.name}")
                     blob.upload_from_file(
                         image_file, content_type=image_file.content_type
                     )
-                    blob.make_public() # Bắt buộc để tạo public link
+                    blob.make_public()
                     
-                    # Sửa lỗi cache: Thêm timestamp vào URL để trình duyệt tải ảnh mới ngay lập tức
-                    import time
+                    # Thêm timestamp để tránh cache ảnh cũ
                     update_data["avatar_url"] = f"{blob.public_url}?t={int(time.time())}"
                     
                     try:
@@ -249,14 +316,12 @@ def profile(request):
                 user_ref.set(update_data, merge=True)
                 messages.success(request, "Cập nhật thông tin thành công!")
                 
-            # Reload lại trang để thấy thay đổi
             return redirect("profile")
     else:
         form = UpdateProfileForm(initial=user_data)
 
     username = user_data.get("username") or user_data.get("email", "User")
     
-    # Logic xử lý avatar hiển thị
     avatar_url = user_data.get("avatar_url")
     if not avatar_url:
         safe_username = urllib.parse.quote(username)
@@ -276,9 +341,8 @@ def profile(request):
     )
 
 # ==========================================
-# 5. CÁC HÀM BẢO MẬT
+# 5. CÁC HÀM BẢO MẬT & ĐỔI THÔNG TIN
 # ==========================================
-
 
 def verify_security(request, action_type):
     uid = request.session.get("uid")
@@ -341,11 +405,6 @@ def verify_security(request, action_type):
     )
 
 
-# ==========================================
-# 6. ĐỔI EMAIL
-# ==========================================
-
-
 def change_email_view(request):
     uid = request.session.get("uid")
     if not uid:
@@ -378,15 +437,10 @@ def change_email_view(request):
             "form": form,
             "title": "Đổi Email mới",
             "btn_text": "Lưu Email",
-            "username": username,  # Truyền vào template
-            "avatar_url": avatar_url,  # Truyền vào template
+            "username": username,
+            "avatar_url": avatar_url,
         },
     )
-
-
-# ==========================================
-# 7. ĐỔI SỐ ĐIỆN THOẠI
-# ==========================================
 
 
 def change_phone_view(request):
@@ -397,7 +451,6 @@ def change_phone_view(request):
     if not request.session.get("can_change_phone"):
         return redirect("verify_security", action_type="phone")
 
-    # [FIX] Lấy info hiển thị
     username, avatar_url = _get_user_display_info(uid)
 
     if request.method == "POST":
@@ -423,15 +476,10 @@ def change_phone_view(request):
             "form": form,
             "title": "Đổi Số điện thoại",
             "btn_text": "Lưu Số điện thoại",
-            "username": username,  # Truyền vào template
-            "avatar_url": avatar_url,  # Truyền vào template
+            "username": username,
+            "avatar_url": avatar_url,
         },
     )
-
-
-# ==========================================
-# 8.ĐỔI MẬT KHẨU
-# ==========================================
 
 
 def change_password_view(request):
@@ -465,9 +513,6 @@ def change_password_view(request):
     )
 
 
-# ==========================================
-# 9. QUÊN MẬT KHẨU
-# ==========================================
 def forgot_password(request):
     if request.method == "POST":
         form = ForgotPasswordForm(request.POST)
@@ -490,9 +535,6 @@ def forgot_password(request):
     return render(request, "users/forgot_password.html", {"form": form})
 
 
-# ==========================================
-# 10. XÁC NHẬN ĐỔI MẬT KHẨU
-# ==========================================
 def reset_password_confirm(request):
     oob_code = request.GET.get("oobCode")
     if not oob_code and request.method == "GET":
