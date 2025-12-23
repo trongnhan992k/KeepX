@@ -1,35 +1,71 @@
-{% extends 'base.html' %} {% block title %}Thùng rác - MyNotes{% endblock %} 
+{% extends 'base.html' %} 
+{% block title %}Thùng rác - MyNotes{% endblock %} 
+
 {% block content %}
-<div class="max-w-7xl mx-auto px-4 py-8">
-  <div class="flex items-center gap-4 mb-8">
-    <a
-      href="{% url 'note-list' %}"
-      class="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500 transition"
-    >
-      <i class="fas fa-arrow-left text-xl"></i>
-    </a>
-    <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Thùng rác</h1>
-    <span class="text-sm text-gray-500 italic"
-      >Ghi chú trong thùng rác sẽ bị xóa vĩnh viễn sau 30 ngày (tính năng sắp ra
-      mắt).</span
-    >
+<div class="max-w-7xl mx-auto px-4 py-8"
+     x-data="noteApp({
+         csrfToken: '{{ csrf_token }}',
+         createUrl: '', updateUrl: '', deleteUrl: '',
+         bulkUrl: '{% url 'bulk-action' %}'
+     })">
+     
+  <div class="flex items-center justify-between mb-8">
+    <div class="flex items-center gap-4">
+        <a href="{% url 'note-list' %}" class="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500 transition">
+          <i class="fas fa-arrow-left text-xl"></i>
+        </a>
+        <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Thùng rác</h1>
+    </div>
+    
+    <button @click="toggleSelectionMode()" 
+            x-show="'{{ notes|length }}' > 0"
+            :class="isSelectionMode ? 'bg-emerald-600 text-white' : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300'"
+            class="px-4 py-2 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm transition-colors font-medium text-sm">
+        <span x-text="isSelectionMode ? 'Hủy chọn' : 'Chọn nhiều'"></span>
+    </button>
+  </div>
+
+  <div x-show="isSelectionMode && selectedIds.length > 0" 
+       x-transition.move.bottom
+       class="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-white dark:bg-gray-800 shadow-2xl rounded-full px-6 py-3 border border-gray-200 dark:border-gray-700 flex items-center gap-4">
+      <span class="text-sm font-bold text-gray-700 dark:text-white"><span x-text="selectedIds.length"></span> đã chọn</span>
+      <div class="h-4 w-px bg-gray-300 dark:bg-gray-600"></div>
+      
+      <button @click="performBulkAction('restore')" class="text-sm font-bold text-green-600 hover:text-green-700 flex items-center gap-1">
+          <i class="fas fa-trash-restore-alt"></i> Khôi phục
+      </button>
+      
+      <div class="h-4 w-px bg-gray-300 dark:bg-gray-600"></div>
+      
+      <button @click="performBulkAction('permanent_delete')" class="text-sm font-bold text-red-600 hover:text-red-700 flex items-center gap-1">
+          <i class="fas fa-times"></i> Xóa vĩnh viễn
+      </button>
   </div>
 
   {% if not notes %}
   <div class="text-center py-20 opacity-50">
     <i class="fas fa-trash-alt text-6xl text-gray-300 mb-4"></i>
-    <p class="text-xl">Thùng rác trống</p>
+    <p class="text-xl dark:text-gray-400">Thùng rác trống</p>
   </div>
   {% else %}
-  <div
-    class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4"
-  >
+  <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 pb-20">
     {% for note in notes %}
     <div
-      class="relative group rounded-xl border border-gray-200 dark:border-gray-700 p-4 flex flex-col opacity-75 hover:opacity-100 transition"
-      style="{% if note.color %}background-color: {{ note.color }}{% else %}background-color: transparent{% endif %}"
-      class="{% if not note.color %}bg-white dark:bg-dark-card{% endif %}"
+      data-note-id="{{ note.id }}"
+      @click="if(isSelectionMode) toggleNoteSelection('{{ note.id }}')"
+      class="relative group rounded-xl border border-gray-200 dark:border-gray-700 p-4 flex flex-col opacity-75 hover:opacity-100 transition cursor-pointer {% if not note.color %}bg-white dark:bg-[#1e293b]{% endif %}"
+      style="{% if note.color %}background-color: {{ note.color }}{% endif %}"
+      :class="[
+          (isSelectionMode && selectedIds.includes('{{ note.id }}')) ? 'ring-4 ring-emerald-500 border-emerald-500 opacity-100' : ''
+      ]"
     >
+      <div x-show="isSelectionMode" class="absolute inset-0 z-50 bg-transparent flex items-start justify-end p-2 pointer-events-none">
+          <div class="w-6 h-6 rounded-full border-2 bg-white flex items-center justify-center transition-colors"
+               :class="selectedIds.includes('{{ note.id }}') ? 'border-emerald-500 bg-emerald-500' : 'border-gray-300'">
+               <i x-show="selectedIds.includes('{{ note.id }}')" class="fas fa-check text-white text-xs"></i>
+          </div>
+      </div>
+
       {% if note.image_url %}
       <img
         src="{{ note.image_url }}"
@@ -37,19 +73,35 @@
       />
       {% endif %}
 
-      <h3 class="font-bold text-gray-800 dark:text-white mb-1">
+      <h3 class="font-bold mb-1 break-words {% if note.color %}text-gray-900{% else %}text-gray-800 dark:text-white{% endif %}">
         {{ note.title|default:"(Không tiêu đề)" }}
       </h3>
-      <p class="text-sm text-gray-600 dark:text-gray-400 line-clamp-3 mb-4">
-        {{ note.content|striptags }}
-      </p>
+
+      <div class="text-sm line-clamp-3 mb-4 flex-grow {% if note.color %}text-gray-900{% else %}text-gray-600 dark:text-gray-400{% endif %}">
+        {% if '{"type":"checklist"' in note.content %}
+            <ul class="space-y-1">
+                 <div x-data="{ items: JSON.parse('{{ note.content|escapejs }}').data }">
+                    <template x-for="item in items.slice(0, 3)">
+                        <li class="flex items-center gap-2 opacity-80">
+                            <i :class="item.checked ? 'far fa-check-square' : 'far fa-square'"></i>
+                            <span :class="{'line-through': item.checked}" x-text="item.text"></span>
+                        </li>
+                    </template>
+                    <div x-show="items.length > 3" class="text-xs opacity-60 italic pt-1">... và các mục khác</div>
+                 </div>
+            </ul>
+        {% else %}
+            {{ note.content|striptags }}
+        {% endif %}
+      </div>
 
       <div
-        class="mt-auto flex justify-end gap-2 pt-3 border-t border-black/5 dark:border-white/5"
+        class="mt-auto flex justify-end gap-2 pt-3 border-t {% if note.color %}border-black/10{% else %}border-black/5 dark:border-white/5{% endif %}"
       >
         <a
           href="{% url 'note-restore' note.id %}"
-          class="p-2 text-green-600 hover:bg-green-100 dark:hover:bg-green-900/30 rounded-lg transition"
+          @click.stop
+          class="p-2 rounded-lg transition {% if note.color %}text-green-800 hover:bg-green-100/50{% else %}text-green-600 hover:bg-green-100 dark:hover:bg-green-900/30{% endif %}"
           title="Khôi phục"
         >
           <i class="fas fa-trash-restore-alt"></i>
@@ -57,8 +109,8 @@
 
         <a
           href="{% url 'note-permanent-delete' note.id %}"
-          onclick="return confirm('Hành động này không thể hoàn tác!')"
-          class="p-2 text-red-600 hover:bg-red-100 dark:hover:bg-red-900/30 rounded-lg transition"
+          @click.stop="return confirm('Hành động này không thể hoàn tác!')"
+          class="p-2 rounded-lg transition {% if note.color %}text-red-800 hover:bg-red-100/50{% else %}text-red-600 hover:bg-red-100 dark:hover:bg-red-900/30{% endif %}"
           title="Xóa vĩnh viễn"
         >
           <i class="fas fa-times"></i>
