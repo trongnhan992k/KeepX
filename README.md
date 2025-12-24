@@ -151,8 +151,8 @@ Truy cập: `http://127.0.0.1:8000`
 
 Truy cập: `http://localhost:8080`
 
-📂 Cấu Trúc Dự Án
-Plaintext
+## 📂 Cấu Trúc Dự Án
+
 
 KeepX/
 ├── config/                     # Cấu hình lõi của dự án
