@@ -155,24 +155,29 @@ docker run -p 8080:8080 --env-file .env keepx-app
 
 Truy cập: `http://localhost:8080`
 
-## 📂 Cấu Trúc Dự Án
 
-text
+📂 Cấu Trúc Dự Án
 KeepX/
-├── config/                 # Cấu hình Django & Firebase Init
-├── notes/                  # App quản lý Ghi chú & Tasks
-│   ├── views.py            # Logic CRUD, Deadline, Bulk Actions
-│   └── templates/notes/    # Giao diện Note
-├── users/                  # App quản lý Người dùng
-│   ├── views.py            # Auth, Social Login, Profile Security
-│   └── templates/users/    # Giao diện Login/Register/Profile
+├── config/                 # Cấu hình Django & Firebase Setup
+│   ├── settings.py         # Cài đặt chính, đọc biến môi trường
+│   ├── firebase_setup.py   # Khởi tạo Firebase Admin SDK
+│   └── urls.py             # Định tuyến gốc
+├── notes/                  # App quản lý ghi chú
+│   ├── views.py            # Logic CRUD, xử lý ảnh, chia sẻ
+│   ├── urls.py             # Định tuyến cho ghi chú
+│   └── templates/notes/    # Giao diện danh sách, form, thùng rác
+├── users/                  # App quản lý người dùng
+│   ├── views.py            # Logic Auth, Profile, Bảo mật
+│   ├── forms.py            # Form đăng ký, đăng nhập, đổi mật khẩu
+│   └── templates/users/    # Giao diện Auth
 ├── static/                 # CSS, JS, Images, Favicon
-├── templates/              # Base layout
-├── serviceAccountKey.json  # (Gitignored) Firebase Credential
-├── .env                    # (Gitignored) Environment Variables
+├── templates/              # Base layout & components
+├── serviceAccountKey.json  # (Ignored) Key kết nối Firebase Admin
+├── .env                    # (Ignored) Biến môi trường
 ├── Dockerfile              # Cấu hình Docker
+├── requirements.txt        # Các thư viện phụ thuộc
+├── clear_my_cache.PY       # Xoá cache
 └── manage.py
-
 
 
 ## 🤝 Đóng Góp (Contributing)
