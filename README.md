@@ -153,7 +153,6 @@ Truy cập: `http://localhost:8080`
 
 ## 📂 Cấu Trúc Dự Án
 
-
 KeepX/
 ├── config/                     # Cấu hình lõi của dự án
 │   ├── firebase_setup.py       # Khởi tạo kết nối Firebase Admin SDK
@@ -164,26 +163,27 @@ KeepX/
 ├── notes/                      # App: Quản lý Ghi chú & Công việc
 │   ├── forms.py                # Các Form xử lý dữ liệu ghi chú
 │   ├── urls.py                 # Định tuyến URL nội bộ cho notes
-│   ├── views.py                # Logic chính: CRUD, Upload ảnh, Deadline, Ghim
-│   └── templates/notes/        # Giao diện riêng của Notes
-│       ├── note_form.html      # Form thêm/sửa ghi chú
-│       ├── note_list.html      # Danh sách ghi chú & công việc
-│       └── trash.html          # Thùng rác
+│   └──views.py                # Logic chính: CRUD, Upload ảnh, Deadline, Ghim
 ├── users/                      # App: Quản lý Người dùng & Xác thực
 │   ├── forms.py                # Form đăng ký, đăng nhập, đổi mật khẩu
 │   ├── urls.py                 # Định tuyến URL nội bộ cho users
-│   ├── views.py                # Logic Auth, Profile, Social Login, Bảo mật
-│   └── templates/users/        # Giao diện Authentication & Profile
-│       ├── login.html          # Đăng nhập
-│       ├── register.html       # Đăng ký
-│       ├── profile.html        # Thông tin cá nhân
-│       ├── verify_security.html# Xác thực lại mật khẩu (Re-auth)
-│       └── ...                 # Các file hỗ trợ đổi mật khẩu/email
+│   └── views.py                # Logic Auth, Profile, Social Login, Bảo mật
+│
 ├── static/                     # Tài nguyên tĩnh (CSS, JS, Images gốc)
 │   ├── css/style.css           # Tailwind directives & Custom CSS
 │   ├── js/app.js               # Logic Frontend (Alpine.js)
 │   └── images/                 # Logo & assets
 ├── templates/                  # Giao diện chung (Global Templates)
+│   ├── notes/        # Giao diện riêng của Notes
+│   │  ├── note_form.html      # Form thêm/sửa ghi chú
+│   │  ├── note_list.html      # Danh sách ghi chú & công việc
+│   │  └── trash.html          # Thùng rác
+│   ├── templates/users/        # Giao diện Authentication & Profile
+│   │   ├── login.html          # Đăng nhập
+│   │   ├── register.html       # Đăng ký
+│   │   ├── profile.html        # Thông tin cá nhân
+│   │   ├── verify_security.html# Xác thực lại mật khẩu (Re-auth)
+│   │   └── ...                 # Các file hỗ trợ đổi mật khẩu/email
 │   ├── base.html               # Layout chính (Header, Footer, Sidebar)
 │   └── index.html              # Trang chủ (Landing page)
 ├── deploy.sh                   # Script triển khai (Shell)
