@@ -23,60 +23,55 @@
 ## 🚀 Tính Năng Mới & Nổi Bật
 
 ### 📅 Quản Lý Công Việc & Deadline (Mới)
-
-- **Trạng thái công việc:** Phân loại ghi chú theo quy trình: _Cần làm (Todo)_ -> _Đang làm (Doing)_ -> _Hoàn thành (Done)_.
-- **Deadline thông minh:** Thiết lập hạn chót cho từng ghi chú.
-- **Tự động báo trễ hạn:** Hệ thống tự động kiểm tra và chuyển trạng thái sang **Overdue** (Quá hạn) dựa trên múi giờ Việt Nam (UTC+7) theo thời gian thực.
+* **Trạng thái công việc:** Phân loại ghi chú theo quy trình: *Cần làm (Todo)* -> *Đang làm (Doing)* -> *Hoàn thành (Done)*.
+* **Deadline thông minh:** Thiết lập hạn chót cho từng ghi chú.
+* **Tự động báo trễ hạn:** Hệ thống tự động kiểm tra và chuyển trạng thái sang **Overdue** (Quá hạn) dựa trên múi giờ Việt Nam (UTC+7) theo thời gian thực.
 
 ### ⚡ Thao tác & Hiệu Suất (Mới)
-
-- **Bulk Actions (Thao tác hàng loạt):** Cho phép chọn nhiều ghi chú cùng lúc để Xóa, Khôi phục hoặc Xóa vĩnh viễn chỉ với 1 cú click.
-- **Ghim ghi chú (Pin):** Đưa các ghi chú quan trọng lên đầu danh sách.
-- **Tìm kiếm & Lọc:** Lọc nhanh theo Nhãn (Labels) hoặc trạng thái.
+* **Bulk Actions (Thao tác hàng loạt):** Cho phép chọn nhiều ghi chú cùng lúc để Xóa, Khôi phục hoặc Xóa vĩnh viễn chỉ với 1 cú click.
+* **Ghim ghi chú (Pin):** Đưa các ghi chú quan trọng lên đầu danh sách.
+* **Tìm kiếm & Lọc:** Lọc nhanh theo Nhãn (Labels) hoặc trạng thái.
 
 ### 🔐 Xác Thực & Bảo Mật Nâng Cao
-
-- **Đa dạng phương thức đăng nhập:**
-  - Email/Password truyền thống.
-  - **Social Login:** Hỗ trợ đăng nhập nhanh qua Google/Facebook (xác thực qua Token ID).
-- **Bảo vệ tài khoản:** Cơ chế **Re-authentication** (Yêu cầu nhập lại mật khẩu) bắt buộc trước khi thực hiện các thay đổi nhạy cảm như đổi Email, Số điện thoại hoặc Mật khẩu mới.
-- **Avatar tự động:** Tự động tạo Avatar dựa trên tên người dùng (UI Avatars) nếu chưa upload ảnh.
+* **Đa dạng phương thức đăng nhập:**
+    * Email/Password truyền thống.
+    * **Social Login:** Hỗ trợ đăng nhập nhanh qua Google/Facebook (xác thực qua Token ID).
+* **Bảo vệ tài khoản:** Cơ chế **Re-authentication** (Yêu cầu nhập lại mật khẩu) bắt buộc trước khi thực hiện các thay đổi nhạy cảm như đổi Email, Số điện thoại hoặc Mật khẩu mới.
+* **Avatar tự động:** Tự động tạo Avatar dựa trên tên người dùng (UI Avatars) nếu chưa upload ảnh.
 
 ### 📝 Các Tính Năng Cốt Lõi
-
-- **Soạn thảo Rich Text:** Hỗ trợ in đậm, nghiêng, danh sách checklist.
-- **Đa phương tiện:** Upload và đính kèm hình ảnh trực tiếp lên Firebase Storage.
-- **Nhắc nhở (Reminder):** Đặt lịch nhắc nhở cá nhân.
-- **Thùng rác an toàn:** Cơ chế "Soft Delete" cho phép khôi phục dữ liệu đã lỡ tay xóa.
-- **Chia sẻ & Cộng tác:** Mời bạn bè xem ghi chú qua Email, đồng bộ trạng thái giữa các tài khoản.
-- **Giao diện:** Dark Mode/Light Mode tự động, Responsive 100% trên mọi thiết bị.
+* **Soạn thảo Rich Text:** Hỗ trợ in đậm, nghiêng, danh sách checklist.
+* **Đa phương tiện:** Upload và đính kèm hình ảnh trực tiếp lên Firebase Storage.
+* **Nhắc nhở (Reminder):** Đặt lịch nhắc nhở cá nhân.
+* **Thùng rác an toàn:** Cơ chế "Soft Delete" cho phép khôi phục dữ liệu đã lỡ tay xóa.
+* **Chia sẻ & Cộng tác:** Mời bạn bè xem ghi chú qua Email, đồng bộ trạng thái giữa các tài khoản.
+* **Giao diện:** Dark Mode/Light Mode tự động, Responsive 100% trên mọi thiết bị.
 
 ## 🛠️ Công Nghệ Sử Dụng
 
 Dự án được xây dựng với các phiên bản thư viện mới nhất để đảm bảo hiệu năng và bảo mật:
 
-- **Backend:** Python 3.12+, Django 5.2.8
-- **Database:** Google Cloud Firestore (NoSQL Realtime Database)
-- **Storage:** Firebase Cloud Storage (Lưu trữ ảnh)
-- **Authentication:** Firebase Authentication (Quản lý User & Token)
-- **Frontend:**
-  - HTML5 / CSS3 / JavaScript
-  - **TailwindCSS:** Framework CSS utility-first.
-  - **Alpine.js:** Xử lý tương tác UI nhẹ nhàng (Frontend logic).
-- **Server/Deployment:** Gunicorn 23.0, Docker, Google Cloud Run.
+* **Backend:** Python 3.12+, Django 5.2.8
+* **Database:** Google Cloud Firestore (NoSQL Realtime Database)
+* **Storage:** Firebase Cloud Storage (Lưu trữ ảnh)
+* **Authentication:** Firebase Authentication (Quản lý User & Token)
+* **Frontend:**
+    * HTML5 / CSS3 / JavaScript
+    * **TailwindCSS:** Framework CSS utility-first.
+    * **Alpine.js:** Xử lý tương tác UI nhẹ nhàng (Frontend logic).
+* **Server/Deployment:** Gunicorn 23.0, Docker, Google Cloud Run.
 
 ## ⚙️ Yêu Cầu Tiên Quyết
 
-- [Python 3.10+](https://www.python.org/downloads/)
-- [Git](https://git-scm.com/)
-- Tài khoản Google Cloud & Project trên [Firebase Console](https://console.firebase.google.com/)
+* [Python 3.10+](https://www.python.org/downloads/)
+* [Git](https://git-scm.com/)
+* Tài khoản Google Cloud & Project trên [Firebase Console](https://console.firebase.google.com/)
 
 ---
 
 ## 📥 Hướng Dẫn Cài Đặt & Chạy (Local)
 
 ### 1. Clone dự án
-
 bash
 git clone [https://github.com/trongnhan992k/KeepX.git](https://github.com/trongnhan992k/KeepX.git)
 cd KeepX
@@ -84,14 +79,11 @@ cd KeepX
 ### 2. Thiết lập môi trường ảo
 
 bash
-
 # Windows
-
 python -m venv venv
 venv\Scripts\activate
 
 # macOS/Linux
-
 python3 -m venv venv
 source venv/bin/activate
 
@@ -115,17 +107,13 @@ Dự án cần kết nối tới Firebase để hoạt động.
 Tạo file `.env` tại thư mục gốc và điền thông tin:
 
 env
-
 # Lấy trong Project Settings -> General -> Web API Key
-
 FIREBASE_WEB_API_KEY=AIzaSyD...
 
 # Lấy trong Storage -> Copy link bucket (bỏ đoạn "gs://")
-
 FIREBASE_STORAGE_BUCKET=ten-project-cua-ban.firebasestorage.app
 
 # Cấu hình Django
-
 DEBUG=True
 SECRET_KEY=django-insecure-your-random-key...
 
@@ -141,18 +129,17 @@ Truy cập: `http://127.0.0.1:8000`
 ## 🐳 Chạy với Docker
 
 1. **Build Image:**
-   bash
-   docker build -t keepx-app .
+bash
+docker build -t keepx-app .
 
 2. **Run Container:**
-   _Lưu ý: Đảm bảo đã có `serviceAccountKey.json` và `.env` trước khi build/run._
-   bash
-   docker run -p 8080:8080 --env-file .env keepx-app
+*Lưu ý: Đảm bảo đã có `serviceAccountKey.json` và `.env` trước khi build/run.*
+bash
+docker run -p 8080:8080 --env-file .env keepx-app
 
 Truy cập: `http://localhost:8080`
 
 ## 📂 Cấu Trúc Dự Án
-
 KeepX/
 ├── config/                     # Cấu hình lõi của dự án
 │   ├── firebase_setup.py       # Khởi tạo kết nối Firebase Admin SDK
@@ -192,7 +179,6 @@ KeepX/
 ├── manage.py                   # Trình quản lý Django CLI
 ├── requirements.txt            # Danh sách thư viện Python
 └── serviceAccountKey.json      # (Không commit) Key bảo mật Firebase
-
 ## 🤝 Đóng Góp (Contributing)
 
 1. Fork dự án.
