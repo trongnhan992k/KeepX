@@ -157,6 +157,8 @@ Truy cập: `http://localhost:8080`
 
 
 📂 Cấu Trúc Dự Án
+
+
 KeepX/
 ├── config/                 # Cấu hình Django & Firebase Setup
 │   ├── settings.py         # Cài đặt chính, đọc biến môi trường
