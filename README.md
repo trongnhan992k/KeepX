@@ -1,6 +1,6 @@
-# KeepX - Ứng Dụng Ghi Chú Hiện Đại & Bảo Mật
+# KeepX - Ứng Dụng Ghi Chú & Quản Lý Công Việc Thông Minh
 
-**KeepX** là một ứng dụng quản lý ghi chú mạnh mẽ, được xây dựng trên nền tảng **Django** kết hợp với sức mạnh đám mây của **Firebase**. Ứng dụng tập trung vào trải nghiệm người dùng tối giản, tốc độ phản hồi nhanh và khả năng đồng bộ hóa dữ liệu thời gian thực.
+**KeepX** là giải pháp quản lý cá nhân toàn diện, kết hợp giữa khả năng ghi chú linh hoạt và quản lý tiến độ công việc. Được xây dựng trên sức mạnh của **Django 5** và tốc độ thực của **Google Firebase**, KeepX mang lại trải nghiệm mượt mà, bảo mật và đồng bộ hóa tức thì.
 
 **Light mode**
 ![Index Screen](screenshots/index-light.png)
@@ -20,60 +20,67 @@
 ![Trash Screen](screenshots/trash-dark.png)
 ![Profile Screen](screenshots/profile-dark.png)
 
-## 🚀 Tính Năng Nổi Bật
+## 🚀 Tính Năng Mới & Nổi Bật
 
-### 🔐 Xác Thực & Người Dùng
-* **Đăng ký/Đăng nhập:** Hỗ trợ xác thực qua Email/Password sử dụng Firebase Authentication.
-* **Bảo mật:** Cơ chế xác thực bảo mật khi thực hiện các hành động nhạy cảm (đổi mật khẩu, đổi email).
-* **Quên mật khẩu:** Quy trình khôi phục mật khẩu an toàn qua email.
-* **Hồ sơ cá nhân:** Cập nhật thông tin, avatar (upload lên Firebase Storage) và quản lý tài khoản.
+### 📅 Quản Lý Công Việc & Deadline (Mới)
+* **Trạng thái công việc:** Phân loại ghi chú theo quy trình: *Cần làm (Todo)* -> *Đang làm (Doing)* -> *Hoàn thành (Done)*.
+* **Deadline thông minh:** Thiết lập hạn chót cho từng ghi chú.
+* **Tự động báo trễ hạn:** Hệ thống tự động kiểm tra và chuyển trạng thái sang **Overdue** (Quá hạn) dựa trên múi giờ Việt Nam (UTC+7) theo thời gian thực.
 
-### 📝 Quản Lý Ghi Chú
-* **Soạn thảo:** Hỗ trợ định dạng văn bản (in đậm, nghiêng), danh sách việc cần làm (checklist).
-* **Tổ chức:** Ghim ghi chú quan trọng, gán nhãn (Labels) và tô màu nền cho ghi chú.
-* **Đa phương tiện:** Đính kèm hình ảnh vào ghi chú.
-* **Nhắc nhở:** Đặt lịch nhắc nhở cho từng ghi chú.
-* **Thùng rác:** Cơ chế "xóa mềm" cho phép khôi phục ghi chú đã xóa hoặc xóa vĩnh viễn.
-* **Chế độ xem:** Chuyển đổi linh hoạt giữa dạng Lưới (Grid) và Danh sách (List).
+### ⚡ Thao tác & Hiệu Suất (Mới)
+* **Bulk Actions (Thao tác hàng loạt):** Cho phép chọn nhiều ghi chú cùng lúc để Xóa, Khôi phục hoặc Xóa vĩnh viễn chỉ với 1 cú click.
+* **Ghim ghi chú (Pin):** Đưa các ghi chú quan trọng lên đầu danh sách.
+* **Tìm kiếm & Lọc:** Lọc nhanh theo Nhãn (Labels) hoặc trạng thái.
 
-### 🤝 Chia Sẻ & Hợp Tác
-* **Chia sẻ:** Chia sẻ ghi chú với người dùng khác thông qua email.
-* **Đồng bộ:** Dữ liệu được đồng bộ hóa tức thì nhờ Firestore.
+### 🔐 Xác Thực & Bảo Mật Nâng Cao
+* **Đa dạng phương thức đăng nhập:**
+    * Email/Password truyền thống.
+    * **Social Login:** Hỗ trợ đăng nhập nhanh qua Google/Facebook (xác thực qua Token ID).
+* **Bảo vệ tài khoản:** Cơ chế **Re-authentication** (Yêu cầu nhập lại mật khẩu) bắt buộc trước khi thực hiện các thay đổi nhạy cảm như đổi Email, Số điện thoại hoặc Mật khẩu mới.
+* **Avatar tự động:** Tự động tạo Avatar dựa trên tên người dùng (UI Avatars) nếu chưa upload ảnh.
 
-### 🎨 Giao Diện (UI/UX)
-* **Dark Mode:** Hỗ trợ giao diện sáng/tối hoàn chỉnh, tự động theo hệ thống hoặc tùy chỉnh thủ công.
-* **Responsive:** Thiết kế tương thích hoàn hảo trên Mobile, Tablet và Desktop nhờ TailwindCSS.
+### 📝 Các Tính Năng Cốt Lõi
+* **Soạn thảo Rich Text:** Hỗ trợ in đậm, nghiêng, danh sách checklist.
+* **Đa phương tiện:** Upload và đính kèm hình ảnh trực tiếp lên Firebase Storage.
+* **Nhắc nhở (Reminder):** Đặt lịch nhắc nhở cá nhân.
+* **Thùng rác an toàn:** Cơ chế "Soft Delete" cho phép khôi phục dữ liệu đã lỡ tay xóa.
+* **Chia sẻ & Cộng tác:** Mời bạn bè xem ghi chú qua Email, đồng bộ trạng thái giữa các tài khoản.
+* **Giao diện:** Dark Mode/Light Mode tự động, Responsive 100% trên mọi thiết bị.
 
 ## 🛠️ Công Nghệ Sử Dụng
 
-* **Backend:** Python 3.12, Django 5.2.8
-* **Database:** Google Cloud Firestore (NoSQL)
-* **Authentication:** Firebase Authentication
-* **File Storage:** Firebase Cloud Storage
+Dự án được xây dựng với các phiên bản thư viện mới nhất để đảm bảo hiệu năng và bảo mật:
+
+* **Backend:** Python 3.12+, Django 5.2.8
+* **Database:** Google Cloud Firestore (NoSQL Realtime Database)
+* **Storage:** Firebase Cloud Storage (Lưu trữ ảnh)
+* **Authentication:** Firebase Authentication (Quản lý User & Token)
 * **Frontend:**
-    * HTML5 / CSS3
-    * [TailwindCSS](https://tailwindcss.com/) (CDN) - Styling
-    * [Alpine.js](https://alpinejs.dev/) - Tương tác UI nhẹ nhàng
-* **Deployment:** Docker, Google Cloud Run (Gunicorn WSGI)
+    * HTML5 / CSS3 / JavaScript
+    * **TailwindCSS:** Framework CSS utility-first.
+    * **Alpine.js:** Xử lý tương tác UI nhẹ nhàng (Frontend logic).
+* **Server/Deployment:** Gunicorn 23.0, Docker, Google Cloud Run.
 
 ## ⚙️ Yêu Cầu Tiên Quyết
 
-Trước khi cài đặt, đảm bảo máy tính của bạn đã có:
 * [Python 3.10+](https://www.python.org/downloads/)
 * [Git](https://git-scm.com/)
-* Một dự án đã tạo trên [Firebase Console](https://console.firebase.google.com/)
+* Tài khoản Google Cloud & Project trên [Firebase Console](https://console.firebase.google.com/)
 
 ---
 
-## 📥 Hướng Dẫn Cài Đặt (Local)
+## 📥 Hướng Dẫn Cài Đặt & Chạy (Local)
 
 ### 1. Clone dự án
-```bash
+bash
 git clone [https://github.com/trongnhan992k/KeepX.git](https://github.com/trongnhan992k/KeepX.git)
 cd KeepX
-2. Thiết lập môi trường ảo
-Bash
 
+
+
+### 2. Thiết lập môi trường ảo
+
+bash
 # Windows
 python -m venv venv
 venv\Scripts\activate
@@ -81,97 +88,103 @@ venv\Scripts\activate
 # macOS/Linux
 python3 -m venv venv
 source venv/bin/activate
-3. Cài đặt thư viện
-Bash
+
+
+
+### 3. Cài đặt thư viện
+
+bash
 pip install -r requirements.txt
-4. 🔑 Cấu Hình Firebase (QUAN TRỌNG)
-Dự án cần 2 thành phần bảo mật để kết nối Firebase. Tuyệt đối không commit các file này lên Git.
 
-Bước 4.1: File Service Account (Cho Admin SDK)
 
-Truy cập Firebase Console -> Project Settings -> Service accounts.
 
-Chọn Generate new private key.
+### 4. 🔑 Cấu Hình Firebase (BẮT BUỘC)
 
-Đổi tên file tải về thành serviceAccountKey.json.
+Dự án cần kết nối tới Firebase để hoạt động.
 
-Đặt file này vào thư mục gốc của dự án (ngang hàng với manage.py).
+**Bước 4.1: Service Account Key**
 
-Bước 4.2: Biến môi trường (.env)
+1. Truy cập Firebase Console -> Project Settings -> Service accounts.
+2. Chọn **Generate new private key**.
+3. Đổi tên file tải về thành `serviceAccountKey.json`.
+4. Copy file này vào thư mục gốc của dự án (ngang hàng với `manage.py`).
 
-Tạo file .env tại thư mục gốc.
+**Bước 4.2: Biến môi trường (.env)**
+Tạo file `.env` tại thư mục gốc và điền thông tin:
 
-Sao chép nội dung mẫu dưới đây và điền thông tin từ Firebase Console:
-
-Code snippet
-
+env
 # Lấy trong Project Settings -> General -> Web API Key
 FIREBASE_WEB_API_KEY=AIzaSyD...
 
 # Lấy trong Storage -> Copy link bucket (bỏ đoạn "gs://")
-# Ví dụ: keepx-project.firebasestorage.app
 FIREBASE_STORAGE_BUCKET=ten-project-cua-ban.firebasestorage.app
 
-# Cấu hình Django (Đặt True khi chạy Local)
+# Cấu hình Django
 DEBUG=True
-SECRET_KEY=django-insecure-random-key...
-5. Chạy ứng dụng
-Bash
+SECRET_KEY=django-insecure-your-random-key...
 
+
+
+### 5. Chạy ứng dụng
+
+bash
 python manage.py runserver
-Truy cập ứng dụng tại: http://127.0.0.1:8000
 
-🐳 Chạy với Docker
-Dự án đã được cấu hình sẵn Dockerfile để đóng gói và triển khai.
 
-1. Build Docker Image
 
-Bash
+Truy cập: `http://127.0.0.1:8000`
 
+---
+
+## 🐳 Chạy với Docker
+
+1. **Build Image:**
+bash
 docker build -t keepx-app .
-2. Chạy Container Lưu ý: Cần đảm bảo file .env và serviceAccountKey.json đã có trong thư mục trước khi build.
 
-Bash
 
+
+
+2. **Run Container:**
+*Lưu ý: Đảm bảo đã có `serviceAccountKey.json` và `.env` trước khi build/run.*
+bash
 docker run -p 8080:8080 --env-file .env keepx-app
-Truy cập tại: http://localhost:8080
 
-📂 Cấu Trúc Dự Án
+
+
+
+Truy cập: `http://localhost:8080`
+
+## 📂 Cấu Trúc Dự Án
+
+text
 KeepX/
-├── config/                 # Cấu hình Django & Firebase Setup
-│   ├── settings.py         # Cài đặt chính, đọc biến môi trường
-│   ├── firebase_setup.py   # Khởi tạo Firebase Admin SDK
-│   └── urls.py             # Định tuyến gốc
-├── notes/                  # App quản lý ghi chú
-│   ├── views.py            # Logic CRUD, xử lý ảnh, chia sẻ
-│   ├── urls.py             # Định tuyến cho ghi chú
-│   └── templates/notes/    # Giao diện danh sách, form, thùng rác
-├── users/                  # App quản lý người dùng
-│   ├── views.py            # Logic Auth, Profile, Bảo mật
-│   ├── forms.py            # Form đăng ký, đăng nhập, đổi mật khẩu
-│   └── templates/users/    # Giao diện Auth
-├── screenshots/            # Ảnh chụp giao diện
+├── config/                 # Cấu hình Django & Firebase Init
+├── notes/                  # App quản lý Ghi chú & Tasks
+│   ├── views.py            # Logic CRUD, Deadline, Bulk Actions
+│   └── templates/notes/    # Giao diện Note
+├── users/                  # App quản lý Người dùng
+│   ├── views.py            # Auth, Social Login, Profile Security
+│   └── templates/users/    # Giao diện Login/Register/Profile
 ├── static/                 # CSS, JS, Images, Favicon
-├── templates/              # Base layout & components
-├── serviceAccountKey.json  # (Ignored) Key kết nối Firebase Admin
-├── .env                    # (Ignored) Biến môi trường
+├── templates/              # Base layout
+├── serviceAccountKey.json  # (Gitignored) Firebase Credential
+├── .env                    # (Gitignored) Environment Variables
 ├── Dockerfile              # Cấu hình Docker
-├── requirements.txt        # Các thư viện phụ thuộc
 └── manage.py
-🤝 Đóng Góp (Contributing)
-Mọi đóng góp đều được hoan nghênh! Vui lòng thực hiện theo quy trình sau:
 
-Fork dự án.
 
-Tạo nhánh tính năng (git checkout -b feature/TinhNangMoi).
 
-Commit thay đổi (git commit -m 'Thêm tính năng X').
+## 🤝 Đóng Góp (Contributing)
 
-Push lên nhánh (git push origin feature/TinhNangMoi).
+1. Fork dự án.
+2. Tạo nhánh tính năng (`git checkout -b feature/TinhNangMoi`).
+3. Commit thay đổi (`git commit -m 'Thêm tính năng X'`).
+4. Push lên nhánh (`git push origin feature/TinhNangMoi`).
+5. Tạo Pull Request.
 
-Tạo Pull Request.
+## 📄 License
 
-📄 License
-Dự án này được phát hành dưới giấy phép MIT.
+Dự án được phát hành dưới giấy phép MIT.
 
-Developed with ❤️ by TrongNhan992k
+Developed with ❤️ by **TrongNhan992k**
