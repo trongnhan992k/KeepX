@@ -31,7 +31,6 @@ FIREBASE_WEB_API_KEY = settings.FIREBASE_WEB_API_KEY
 # HÀM PHỤ TRỢ (HELPER)
 # ==========================================
 def _get_user_display_info(uid):
-    """Lấy thông tin user và avatar an toàn"""
     try:
         user_ref = db.collection("users").document(uid)
         doc = user_ref.get()
@@ -39,17 +38,14 @@ def _get_user_display_info(uid):
             data = doc.to_dict()
             username = data.get("username") or data.get("email", "User")
             avatar = data.get("avatar_url")
-            
-            # Tạo avatar mặc định nếu không có ảnh
             if not avatar:
-                # Mã hóa tên tiếng Việt sang dạng URL an toàn
                 safe_username = urllib.parse.quote(username)
                 avatar = f"https://ui-avatars.com/api/?name={safe_username}&background=random&color=fff&size=256"
-                
+
             return username, avatar
     except Exception as e:
         print(f"Lỗi lấy info user: {e}")
-    
+
     return "User", "https://ui-avatars.com/api/?name=User&background=random&color=fff"
 
 
@@ -124,11 +120,11 @@ def login_view(request):
 
             if not email_to_login:
                 messages.error(request, "Tên đăng nhập hoặc Email không tồn tại!")
-                # [QUAN TRỌNG] Truyền API KEY ngay cả khi lỗi để JS không bị crash
-                return render(request, "users/login.html", {
-                    "form": form,
-                    "FIREBASE_WEB_API_KEY": FIREBASE_WEB_API_KEY
-                })
+                return render(
+                    request,
+                    "users/login.html",
+                    {"form": form, "FIREBASE_WEB_API_KEY": FIREBASE_WEB_API_KEY},
+                )
 
             rest_api_url = f"https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key={FIREBASE_WEB_API_KEY}"
             payload = {
@@ -183,12 +179,11 @@ def login_view(request):
                 messages.error(request, f"Lỗi kết nối: {str(e)}")
     else:
         form = LoginForm()
-
-    # [QUAN TRỌNG] Truyền API KEY xuống template để các nút Google/Facebook hoạt động
-    return render(request, "users/login.html", {
-        "form": form,
-        "FIREBASE_WEB_API_KEY": FIREBASE_WEB_API_KEY
-    })
+    return render(
+        request,
+        "users/login.html",
+        {"form": form, "FIREBASE_WEB_API_KEY": FIREBASE_WEB_API_KEY},
+    )
 
 
 # ==========================================
@@ -202,19 +197,16 @@ def social_login(request):
             id_token = body.get("idToken")
 
             if not id_token:
-                return JsonResponse({"status": "error", "message": "Thiếu Token"}, status=400)
-
-            # 1. Xác thực Token với Firebase Admin SDK
+                return JsonResponse(
+                    {"status": "error", "message": "Thiếu Token"}, status=400
+                )
             decoded_token = auth.verify_id_token(id_token)
             uid = decoded_token["uid"]
             email = decoded_token.get("email", "")
             name = decoded_token.get("name", "User")
             picture = decoded_token.get("picture", "")
-
-            # 2. Kiểm tra hoặc tạo User trong Firestore
             user_ref = db.collection("users").document(uid)
             user_doc = user_ref.get()
-
             if not user_doc.exists:
                 if not picture:
                     safe_username = urllib.parse.quote(name)
@@ -226,18 +218,16 @@ def social_login(request):
                     "avatar_url": picture,
                     "created_at": firestore.SERVER_TIMESTAMP,
                     "is_new_user": True,
-                    "auth_provider": "social"
+                    "auth_provider": "social",
                 }
                 user_ref.set(user_data)
             else:
-                # Cập nhật avatar nếu có thay đổi từ mxh
                 if picture:
                     user_ref.update({"avatar_url": picture})
 
-            # 3. Tạo Session Django
             request.session["uid"] = uid
             request.session["user_email"] = email
-            request.session.set_expiry(1209600) 
+            request.session.set_expiry(1209600)
 
             messages.success(request, f"Xin chào, {name}!")
             return JsonResponse({"status": "success", "redirect_url": "/notes/"})
@@ -245,8 +235,10 @@ def social_login(request):
         except Exception as e:
             print(f"Social Login Error: {e}")
             return JsonResponse({"status": "error", "message": str(e)}, status=500)
-    
-    return JsonResponse({"status": "error", "message": "Method not allowed"}, status=405)
+
+    return JsonResponse(
+        {"status": "error", "message": "Method not allowed"}, status=405
+    )
 
 
 # ==========================================
@@ -302,10 +294,10 @@ def profile(request):
                         image_file, content_type=image_file.content_type
                     )
                     blob.make_public()
-                    
-                    # Thêm timestamp để tránh cache ảnh cũ
-                    update_data["avatar_url"] = f"{blob.public_url}?t={int(time.time())}"
-                    
+                    update_data["avatar_url"] = (
+                        f"{blob.public_url}?t={int(time.time())}"
+                    )
+
                     try:
                         auth.update_user(uid, photo_url=update_data["avatar_url"])
                     except:
@@ -316,18 +308,18 @@ def profile(request):
             if update_data:
                 user_ref.set(update_data, merge=True)
                 messages.success(request, "Cập nhật thông tin thành công!")
-                
+
             return redirect("profile")
     else:
         form = UpdateProfileForm(initial=user_data)
 
     username = user_data.get("username") or user_data.get("email", "User")
-    
+
     avatar_url = user_data.get("avatar_url")
     if not avatar_url:
         safe_username = urllib.parse.quote(username)
         avatar_url = f"https://ui-avatars.com/api/?name={safe_username}&background=random&color=fff&size=256"
-    
+
     user_data["avatar_url"] = avatar_url
 
     return render(
@@ -341,17 +333,17 @@ def profile(request):
         },
     )
 
+
 # ==========================================
 # 5. CÁC HÀM BẢO MẬT & ĐỔI THÔNG TIN
 # ==========================================
+
 
 def verify_security(request, action_type):
     uid = request.session.get("uid")
     if not uid:
         return redirect("login")
-
     username, avatar_url = _get_user_display_info(uid)
-
     if request.method == "POST":
         form = VerifyPasswordForm(request.POST)
         if form.is_valid():
@@ -377,7 +369,6 @@ def verify_security(request, action_type):
                         "returnSecureToken": True,
                     },
                 )
-
                 if r.status_code == 200:
                     request.session[f"can_change_{action_type}"] = True
                     return redirect(f"change_{action_type}")
@@ -388,7 +379,6 @@ def verify_security(request, action_type):
                 print(e)
     else:
         form = VerifyPasswordForm()
-
     titles = {
         "email": "Đổi Email",
         "phone": "Đổi Số điện thoại",
@@ -410,12 +400,10 @@ def change_email_view(request):
     uid = request.session.get("uid")
     if not uid:
         return redirect("login")
-
     if not request.session.get("can_change_email"):
         return redirect("verify_security", action_type="email")
 
     username, avatar_url = _get_user_display_info(uid)
-
     if request.method == "POST":
         form = ChangeEmailForm(request.POST, current_uid=uid)
         if form.is_valid():
@@ -430,7 +418,6 @@ def change_email_view(request):
                 messages.error(request, f"Lỗi: {e}")
     else:
         form = ChangeEmailForm(current_uid=uid)
-
     return render(
         request,
         "users/change_info.html",
@@ -448,12 +435,9 @@ def change_phone_view(request):
     uid = request.session.get("uid")
     if not uid:
         return redirect("login")
-
     if not request.session.get("can_change_phone"):
         return redirect("verify_security", action_type="phone")
-
     username, avatar_url = _get_user_display_info(uid)
-
     if request.method == "POST":
         form = ChangePhoneForm(request.POST, current_uid=uid)
         if form.is_valid():
@@ -469,7 +453,6 @@ def change_phone_view(request):
                 messages.error(request, f"Lỗi: {e}")
     else:
         form = ChangePhoneForm(current_uid=uid)
-
     return render(
         request,
         "users/change_info.html",
@@ -487,12 +470,9 @@ def change_password_view(request):
     uid = request.session.get("uid")
     if not uid:
         return redirect("login")
-
     if not request.session.get("can_change_password"):
         return redirect("verify_security", action_type="password")
-
     username, avatar_url = _get_user_display_info(uid)
-
     if request.method == "POST":
         form = ChangePasswordFinalForm(request.POST)
         if form.is_valid():
@@ -512,15 +492,12 @@ def change_password_view(request):
         "users/change_password_final.html",
         {"form": form, "username": username, "avatar_url": avatar_url},
     )
-    
-    
-    
-
 
 
 # ==========================================
 # 3. QUÊN MẬT KHẨU & ACTION HANDLER (ROUTER)
 # ==========================================
+
 
 def forgot_password(request):
     """Gửi yêu cầu reset password"""
@@ -531,74 +508,68 @@ def forgot_password(request):
             try:
                 r = requests.post(
                     f"https://identitytoolkit.googleapis.com/v1/accounts:sendOobCode?key={FIREBASE_WEB_API_KEY}",
-                    json={"requestType": "PASSWORD_RESET", "email": email}
+                    json={"requestType": "PASSWORD_RESET", "email": email},
                 )
                 if r.status_code == 200:
                     messages.success(request, "Email reset password đã được gửi!")
                     return redirect("login")
                 else:
                     error = r.json().get("error", {}).get("message", "")
-                    messages.error(request, "Email không tồn tại." if "EMAIL_NOT_FOUND" in error else error)
-            except Exception as e: messages.error(request, f"Lỗi: {e}")
+                    messages.error(
+                        request,
+                        "Email không tồn tại." if "EMAIL_NOT_FOUND" in error else error,
+                    )
+            except Exception as e:
+                messages.error(request, f"Lỗi: {e}")
     else:
         form = ForgotPasswordForm()
     return render(request, "users/forgot_password.html", {"form": form})
 
 
-# --- TRẠM TRUNG CHUYỂN (ROUTER) ---
 def firebase_action_handler(request):
-    """
-    Hàm này nhận request từ Firebase Email và điều hướng (Redirect)
-    """
-    mode = request.GET.get("mode")  
+    mode = request.GET.get("mode")
     oob_code = request.GET.get("oobCode")
-    
     if not oob_code:
         messages.error(request, "Đường dẫn không hợp lệ hoặc thiếu mã xác thực.")
         return redirect("login")
-
     if mode == "resetPassword":
-        url = reverse("reset_password_confirm") 
+        url = reverse("reset_password_confirm")
         return redirect(f"{url}?oobCode={oob_code}")
-     
 
 
 def reset_password_confirm(request):
-    """
-    View hiển thị form nhập mật khẩu mới.
-    """
     oob_code = request.GET.get("oobCode")
-    
     if not oob_code and request.method == "GET":
         messages.error(request, "Thiếu mã xác thực.")
         return redirect("login")
-
     if request.method == "POST":
         form = ResetPasswordConfirmForm(request.POST)
         if form.is_valid():
             new_pass = form.cleaned_data.get("new_password")
-            
-            # Lấy code từ hidden input trong form hoặc URL
             code = request.POST.get("oob_code_hidden") or oob_code
-
             try:
                 r = requests.post(
                     f"https://identitytoolkit.googleapis.com/v1/accounts:resetPassword?key={FIREBASE_WEB_API_KEY}",
-                    json={"oobCode": code, "newPassword": new_pass}
+                    json={"oobCode": code, "newPassword": new_pass},
                 )
-                
+
                 if r.status_code == 200:
-                    messages.success(request, "Đổi mật khẩu thành công! Vui lòng đăng nhập lại.")
+                    messages.success(
+                        request, "Đổi mật khẩu thành công! Vui lòng đăng nhập lại."
+                    )
                     return redirect("login")
                 else:
-                    messages.error(request, "Link này đã hết hạn hoặc không hợp lệ. Vui lòng thử lại.")
+                    messages.error(
+                        request,
+                        "Link này đã hết hạn hoặc không hợp lệ. Vui lòng thử lại.",
+                    )
                     return redirect("forgot_password")
             except Exception as e:
                 messages.error(request, f"Lỗi kết nối: {str(e)}")
     else:
         form = ResetPasswordConfirmForm()
-    
-    return render(request, "users/reset_password_confirm.html", {
-        "form": form, 
-        "oob_code": oob_code 
-    })
+    return render(
+        request,
+        "users/reset_password_confirm.html",
+        {"form": form, "oob_code": oob_code},
+    )

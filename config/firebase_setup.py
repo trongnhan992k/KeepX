@@ -31,3 +31,4 @@ def initialize_firebase(base_dir):
     except Exception as e:
         print(f"Lỗi khởi tạo Firebase: {e}")
         raise e
+    

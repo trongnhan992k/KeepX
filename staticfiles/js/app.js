@@ -1,5 +1,3 @@
-/* KeepX/static/js/app.js */
-
 function themeApp() {
     return {
         darkMode: localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches),
@@ -19,7 +17,7 @@ function noteApp(config) {
             create: config.createUrl,
             update: config.updateUrl,
             delete: config.deleteUrl,
-            bulk: config.bulkUrl || '/api/bulk-action/' // [MỚI] URL xử lý hàng loạt
+            bulk: config.bulkUrl || '/api/bulk-action/' 
         },
 
         colors: [
@@ -33,11 +31,9 @@ function noteApp(config) {
         viewMode: localStorage.getItem('viewMode') || 'grid',
         isSaving: false,
         
-        // [MỚI] CHẾ ĐỘ CHỌN NHIỀU
         isSelectionMode: false,
         selectedIds: [],
 
-        // Form Data
         isFormOpen: false,
         showFormatTools: false,
         currentNoteId: null,
@@ -70,10 +66,9 @@ function noteApp(config) {
             this.$watch('viewMode', (val) => localStorage.setItem('viewMode', val));
         },
 
-        // --- [MỚI] LOGIC CHỌN NHIỀU ---
         toggleSelectionMode() {
             this.isSelectionMode = !this.isSelectionMode;
-            this.selectedIds = []; // Reset khi tắt/bật
+            this.selectedIds = []; 
         },
 
         toggleNoteSelection(id) {
@@ -85,14 +80,13 @@ function noteApp(config) {
         },
 
         selectAll() {
-            // Lấy tất cả note visible trong DOM (đã lọc)
             const visibleNotes = Array.from(document.querySelectorAll('[data-note-id]'));
             const visibleIds = visibleNotes.map(el => el.getAttribute('data-note-id'));
             
             if (this.selectedIds.length === visibleIds.length) {
-                this.selectedIds = []; // Bỏ chọn hết
+                this.selectedIds = []; 
             } else {
-                this.selectedIds = visibleIds; // Chọn hết
+                this.selectedIds = visibleIds; 
             }
         },
 
@@ -124,7 +118,6 @@ function noteApp(config) {
             }
         },
 
-        // --- Hàm sắp xếp cũ ---
         reorderNotes() {
             const container = document.getElementById('notes-container');
             if (!container) return;
@@ -154,7 +147,6 @@ function noteApp(config) {
             return newPinState;
         },
 
-        // --- QUICK ACTIONS ---
         async quickUpdate(noteId, data) {
             if (!noteId) return;
             const url = this.urls.update.replace("00000", noteId);

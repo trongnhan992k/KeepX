@@ -19,11 +19,10 @@
     <form method="POST" class="p-6 sm:p-8 space-y-6" x-data="{ selectedColor: '{{ note.color|default:'#ffffff' }}' }">
       {% csrf_token %}
 
-      <!-- Color Selection (Cập nhật ring-emerald) -->
+      
       <div>
         <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-3">Màu nền</label>
         <div class="flex flex-wrap gap-3">
-          <!-- White (Default) -->
           <label class="relative cursor-pointer group">
             <input type="radio" name="color" value="#ffffff" class="sr-only" x-model="selectedColor" />
             <div class="w-8 h-8 rounded-full border border-gray-300 shadow-sm transition-transform hover:scale-110"
@@ -31,8 +30,7 @@
               style="background-color: #ffffff"></div>
           </label>
           
-          <!-- Các màu khác (Giữ logic cũ nhưng đổi ring focus) -->
-          <!-- (Copy lại các màu từ list cũ của bạn hoặc dùng vòng lặp nếu có) -->
+          
           <label class="relative cursor-pointer group"><input type="radio" name="color" value="#ffcccb" class="sr-only" x-model="selectedColor" /><div class="w-8 h-8 rounded-full border border-transparent shadow-sm hover:scale-110" :class="{'ring-2 ring-offset-2 ring-emerald-500': selectedColor === '#ffcccb'}" style="background-color: #ffcccb"></div></label>
           <label class="relative cursor-pointer group"><input type="radio" name="color" value="#90ee90" class="sr-only" x-model="selectedColor" /><div class="w-8 h-8 rounded-full border border-transparent shadow-sm hover:scale-110" :class="{'ring-2 ring-offset-2 ring-emerald-500': selectedColor === '#90ee90'}" style="background-color: #90ee90"></div></label>
           <label class="relative cursor-pointer group"><input type="radio" name="color" value="#add8e6" class="sr-only" x-model="selectedColor" /><div class="w-8 h-8 rounded-full border border-transparent shadow-sm hover:scale-110" :class="{'ring-2 ring-offset-2 ring-emerald-500': selectedColor === '#add8e6'}" style="background-color: #add8e6"></div></label>

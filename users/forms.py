@@ -145,8 +145,6 @@ class ChangePhoneForm(forms.Form):
 
     def clean_new_phone(self):
         phone = self.cleaned_data.get("new_phone")
-
-        # Regex: Bắt đầu bằng 0 hoặc +84, theo sau là 9-10 chữ số
         pattern = re.compile(r"^(?:\+84|0)(?:\d){9,10}$")
 
         if not pattern.match(phone):

@@ -6,7 +6,7 @@ from google.cloud.firestore import FieldFilter, Query
 from urllib.parse import unquote, urlparse
 import uuid
 import json
-from datetime import datetime, timedelta  # [CẬP NHẬT] Thêm timedelta
+from datetime import datetime, timedelta 
 
 # --- CẤU HÌNH ---
 db = firestore.client()
@@ -84,15 +84,10 @@ def index_page(request):
 def note_list(request):
     uid = request.session.get("uid")
     if not uid: return redirect("login")
-    
     username, user_email, avatar = _get_user_info(uid)
     all_notes = []
-
-    # [CẬP NHẬT QUAN TRỌNG] Chuyển đổi giờ Server (UTC) sang giờ Việt Nam (UTC+7)
-    # Nếu không cộng 7 tiếng, Server sẽ bị chậm và không bắt kịp deadline thực tế
     now_vn = datetime.utcnow() + timedelta(hours=7)
     now_str = now_vn.strftime("%Y-%m-%dT%H:%M")
-
     notes_ref = db.collection("users").document(uid).collection("notes")
     try:
         docs_generator = (
@@ -112,25 +107,15 @@ def note_list(request):
         note = doc.to_dict()
         note["id"] = doc.id
         note["is_owner"] = True
-        
-        # --- LOGIC TỰ ĐỘNG CHUYỂN TRỄ HẠN ---
         deadline = note.get("deadline", "")
         status = note.get("status", "todo")
-        
-        # So sánh deadline với giờ hiện tại (đã quy đổi về VN)
         if deadline and deadline < now_str and status in ["todo", "doing"]:
-            # Cập nhật hiển thị ngay lập tức
             note["status"] = "overdue"
-            
-            # Cập nhật ngầm vào Firebase để lưu trạng thái
             try:
                 notes_ref.document(doc.id).update({"status": "overdue"})
             except: pass
-        # ------------------------------------
-
         if "labels" not in note: note["labels"] = []
         all_notes.append(note)
-
     try:
         shared_docs = db.collection_group("notes").where(
             filter=FieldFilter("shared_with", "array_contains", uid)
@@ -142,8 +127,6 @@ def note_list(request):
                 note["id"] = doc.id
                 note["is_owner"] = False
                 note["shared_label"] = "Được chia sẻ"
-                
-                # Logic hiển thị trễ hạn cho note được chia sẻ
                 deadline = note.get("deadline", "")
                 status = note.get("status", "todo")
                 if deadline and deadline < now_str and status in ["todo", "doing"]:
@@ -315,11 +298,8 @@ def note_update(request, note_id):
             if "color" in request.POST: update_data["color"] = request.POST.get("color")
             if "is_pinned" in request.POST: update_data["is_pinned"] = request.POST.get("is_pinned") == "true"
             if "reminder" in request.POST: update_data["reminder_time"] = request.POST.get("reminder")
-            
-            # Update Task info
             if "deadline" in request.POST: update_data["deadline"] = request.POST.get("deadline")
             if "status" in request.POST: update_data["status"] = request.POST.get("status")
-
             if "labels" in request.POST:
                 try: update_data["labels"] = json.loads(request.POST.get("labels"))
                 except: pass
@@ -387,7 +367,6 @@ def note_permanent_delete(request, note_id):
     return redirect("trash-list")
 
 
-# --- XỬ LÝ HÀNG LOẠT (BULK ACTION) ---
 def bulk_action(request):
     if request.method == "POST":
         uid = request.session.get("uid")
@@ -406,11 +385,11 @@ def bulk_action(request):
 
             for note_id in note_ids:
                 doc_ref = notes_ref.document(note_id)
-                if action == "delete": # Chuyển vào thùng rác
+                if action == "delete": 
                     batch.update(doc_ref, {"is_trashed": True, "updated_at": firestore.SERVER_TIMESTAMP})
-                elif action == "restore": # Khôi phục
+                elif action == "restore": 
                     batch.update(doc_ref, {"is_trashed": False, "updated_at": firestore.SERVER_TIMESTAMP})
-                elif action == "permanent_delete": # Xóa vĩnh viễn
+                elif action == "permanent_delete": 
                     doc_snapshot = doc_ref.get()
                     if doc_snapshot.exists:
                         data = doc_snapshot.to_dict()

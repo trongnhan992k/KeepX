@@ -1,6 +1,5 @@
-/* static/css/style.css */
 :root {
-    --primary-color: #4A90E2; /* Xanh dương chủ đạo */
+    --primary-color: #4A90E2; 
     --secondary-color: #f5f6fa;
     --text-color: #2d3436;
     --danger-color: #ff6b6b;
@@ -105,7 +104,7 @@ body {
     border: 1px solid #ddd;
     border-radius: 6px;
     font-size: 1rem;
-    box-sizing: border-box; /* Quan trọng để không bị vỡ layout */
+    box-sizing: border-box; 
 }
 .form-control:focus {
     border-color: var(--primary-color);
