@@ -1,6 +1,3 @@
-#!/bin/bash
-
-# Dừng script ngay nếu có lệnh bị lỗi
 set -e
 
 SERVICE_NAME="keepx-backend"

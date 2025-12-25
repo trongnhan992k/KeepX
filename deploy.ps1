@@ -1,9 +1,7 @@
-# deploy.ps1
-
-# --- CẤU HÌNH (Sửa lại nếu cần) ---
-$SERVICE_NAME = "keepx-backend"             # Tên service Cloud Run
-$REGION = "asia-southeast1"         # Region Singapore
-$ENV_FILE = "env.yaml"              # File biến môi trường
+# --- CẤU HÌNH ---
+$SERVICE_NAME = "keepx-backend"             
+$REGION = "asia-southeast1"         
+$ENV_FILE = "env.yaml"              
 
 # --- BẮT ĐẦU ---
 Write-Host "==========================================" -ForegroundColor Cyan
